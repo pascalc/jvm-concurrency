@@ -8,8 +8,9 @@ public class ReadWriteLockAccount implements Account {
     private final Lock readLock = rwl.readLock();
     private final Lock writeLock = rwl.writeLock();
 
-    public long getBalance() {
+    public long getBalance() throws InterruptedException {
         readLock.lock();
+        Thread.sleep(10);
         try { return balance; }
         finally { readLock.unlock(); }
     }
@@ -20,20 +21,20 @@ public class ReadWriteLockAccount implements Account {
         finally { writeLock.unlock(); }
     }
 
-    public void insert(long amount) {
+    public void insert(long amount) throws InterruptedException {
         writeLock.lock();
         try {
             long b = balance;
-            try { Thread.sleep(1); } catch(Exception e) {}
+            Thread.sleep(1);
             balance = b + amount;    
         } finally { writeLock.unlock(); }
     }
 
-    public void withdraw(long amount) {
+    public void withdraw(long amount) throws InterruptedException {
         writeLock.lock();
         try {
             long b = balance;
-            try { Thread.sleep(1); } catch(Exception e) {}
+            Thread.sleep(1);
             balance = b - amount;
         } finally { writeLock.unlock(); }
     }
