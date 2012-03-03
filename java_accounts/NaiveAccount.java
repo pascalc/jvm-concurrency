@@ -9,15 +9,15 @@ public class NaiveAccount implements Account {
         balance = 0;
     }
 
-    public void insert(long amount) {
+    public void insert(long amount) throws InterruptedException {
         long b = balance;
-        try { Thread.sleep(1); } catch(Exception e) {}
+        Thread.sleep(1);
         balance = b + amount;
     }
 
-    public void withdraw(long amount) {
+    public void withdraw(long amount) throws InterruptedException {
         long b = balance;
-        try { Thread.sleep(1); } catch(Exception e) {}
+        Thread.sleep(1);
         balance = b - amount;
     }
 }
