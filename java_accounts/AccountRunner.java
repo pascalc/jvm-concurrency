@@ -82,6 +82,50 @@ public class AccountRunner {
         return timeTaken;
     }
 
+    public static long writeFrenzy(Account account) 
+    throws InterruptedException {
+        final Account a = account;
+        Thread[] writers = new Thread[10];
+        Thread reader;
+
+        for(int w = 0; w < 10; w++) {
+            Thread t = new Thread(new Runnable() {
+                public void run() {
+                    for (int i = 0; i < 9; i++) {
+                        try {
+                            a.insert(1);
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {}
+                    }
+                }
+            });
+            writers[w] = t;
+        }
+
+        reader = new Thread(new Runnable() {
+            public void run() {
+                for (int i = 0; i < 10; i++) {
+                    try {
+                        a.getBalance();
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {}
+                }
+            }
+        });
+
+        long startTime = System.currentTimeMillis();
+        try { 
+            for(Thread t : writers) t.start();
+            reader.start();
+
+            for (Thread t: writers) t.join();
+            reader.join();
+        } catch(Exception e) {}
+        long timeTaken = System.currentTimeMillis() - startTime;
+
+        return timeTaken;
+    }
+
     public static void main(String[] args) throws InterruptedException {
         long[] naiveResults = testCorrectness(new NaiveAccount());
         System.out.println("Naive Account Results: " + Arrays.toString(naiveResults));
@@ -99,5 +143,13 @@ public class AccountRunner {
 
         long readWriteLockReadTime = readFrenzy(new ReadWriteLockAccount());
         System.out.println("Read-Write-Lock Read Frenzy: " + readWriteLockReadTime + " ms");
+
+        System.out.println();
+
+        long synchronizedWriteTime = writeFrenzy(new SynchronizedAccount());
+        System.out.println("Synchronized Write Frenzy: " + synchronizedWriteTime + " ms");
+
+        long readWriteLockWriteTime = writeFrenzy(new ReadWriteLockAccount());
+        System.out.println("Read-Write-Lock Write Frenzy: " + readWriteLockWriteTime + " ms");
     }
 }
