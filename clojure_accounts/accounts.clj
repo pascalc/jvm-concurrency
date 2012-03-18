@@ -43,7 +43,7 @@
         (do-pool! 10 
             (fn [pool]
                 (dothreads! #(insert balance 1) pool :threads 1 :times 10)
-                (dothreads! #(get-balance) pool :threads 9 :times 10)))
+                (dothreads! #(get-balance balance) pool :threads 9 :times 10)))
         (println "Balance: " @balance)))
 
 ; Write frenzy
@@ -52,5 +52,5 @@
         (do-pool! 10 
             (fn [pool]
                 (dothreads! #(insert balance 1) pool :threads 9 :times 10)
-                (dothreads! #(get-balance) pool :threads 1 :times 10)))
+                (dothreads! #(get-balance balance) pool :threads 1 :times 10)))
         (println "Balance: " @balance)))
