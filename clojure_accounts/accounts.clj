@@ -2,6 +2,15 @@
 (import '(java.util.concurrent Executors))
 (import '(java.util.concurrent TimeUnit))
 
+; dosync and count retries
+(defmacro spy-dosync [& body]
+  `(let [retries# (atom -1)
+         result# (dosync
+                   (swap! retries# inc)
+                   ~@body)]
+     (println "retry count:" @retries#)
+     result#))
+
 ; Account manipulation functions
 (defn get-balance [balance]
     (dosync
@@ -17,6 +26,12 @@
     (dosync
         (. Thread sleep 1)
         (alter balance - amount)))
+
+(defn transfer [balance1 balance2 amount]
+    (dosync
+        (withdraw balance1 amount)
+        (. Thread sleep 1)
+        (insert balance2 amount)))
 
 ; Create a thread pool
 (defn make-pool [threads]
@@ -54,3 +69,13 @@
                 (dothreads! #(insert balance 1) pool :threads 9 :times 10)
                 (dothreads! #(get-balance balance) pool :threads 1 :times 10)))
         (println "Balance: " @balance)))
+
+; Mutual transfer - can cause deadlock in Java
+(defn mutual-transfer! []
+    (let [balance1 (ref 10) 
+          balance2 (ref 10)]
+        (do-pool! 2
+            (fn [pool]
+                (dothreads! #(transfer balance1 balance2 5) pool :threads 1 :times 1)
+                (dothreads! #(transfer balance2 balance1 5) pool :threads 1 :times 1)))
+        (println "Balance1: " @balance1 ", Balance2: " @balance2)))
