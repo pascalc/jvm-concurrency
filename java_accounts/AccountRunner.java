@@ -126,30 +126,76 @@ public class AccountRunner {
         return timeTaken;
     }
 
+    public static void deadlock(final Account from, final Account to,
+        final long amount) throws InterruptedException {
+        
+        Thread[] transferThreads = new Thread[2];
+        transferThreads[0] = new Thread(new Runnable() {
+            public void run() {
+                try { transfer(from, to, amount); }
+                catch(Exception e) {}
+            }
+        });
+        transferThreads[1] = new Thread(new Runnable() {
+            public void run() {
+                try { transfer(to, from, amount); }
+                catch(Exception e) {}
+            }
+        });
+
+        for(Thread t : transferThreads) {
+            t.start();
+        }
+
+        for(Thread t : transferThreads) {
+            t.join();
+        }
+    }
+
+    private static void transfer(Account from, Account to, long amount) 
+        throws InterruptedException {
+        
+        synchronized(from) {
+            Thread.sleep(1);
+            synchronized(to) {
+                from.withdraw(amount);
+                to.insert(amount);
+            }
+        }
+    }
+
     public static void main(String[] args) throws InterruptedException {
-        long[] naiveResults = testCorrectness(new NaiveAccount());
-        System.out.println("Naive Account Results: " + Arrays.toString(naiveResults));
+        // long[] naiveResults = testCorrectness(new NaiveAccount());
+        // System.out.println("Naive Account Results: " + Arrays.toString(naiveResults));
 
-        long[] synchronizedResults = testCorrectness(new SynchronizedAccount());
-        System.out.println("Synchronized Account Results: " + Arrays.toString(synchronizedResults));
+        // long[] synchronizedResults = testCorrectness(new SynchronizedAccount());
+        // System.out.println("Synchronized Account Results: " + Arrays.toString(synchronizedResults));
 
-        long[] readWriteLockResults = testCorrectness(new ReadWriteLockAccount());
-        System.out.println("Read-Write-Lock Account Results: " + Arrays.toString(readWriteLockResults));
+        // long[] readWriteLockResults = testCorrectness(new ReadWriteLockAccount());
+        // System.out.println("Read-Write-Lock Account Results: " + Arrays.toString(readWriteLockResults));
 
-        System.out.println();
+        // System.out.println();
 
-        long synchronizedReadTime = readFrenzy(new SynchronizedAccount());
-        System.out.println("Synchronized Read Frenzy: " + synchronizedReadTime + " ms");
+        // long synchronizedReadTime = readFrenzy(new SynchronizedAccount());
+        // System.out.println("Synchronized Read Frenzy: " + synchronizedReadTime + " ms");
 
-        long readWriteLockReadTime = readFrenzy(new ReadWriteLockAccount());
-        System.out.println("Read-Write-Lock Read Frenzy: " + readWriteLockReadTime + " ms");
+        // long readWriteLockReadTime = readFrenzy(new ReadWriteLockAccount());
+        // System.out.println("Read-Write-Lock Read Frenzy: " + readWriteLockReadTime + " ms");
 
-        System.out.println();
+        // System.out.println();
 
-        long synchronizedWriteTime = writeFrenzy(new SynchronizedAccount());
-        System.out.println("Synchronized Write Frenzy: " + synchronizedWriteTime + " ms");
+        // long synchronizedWriteTime = writeFrenzy(new SynchronizedAccount());
+        // System.out.println("Synchronized Write Frenzy: " + synchronizedWriteTime + " ms");
 
-        long readWriteLockWriteTime = writeFrenzy(new ReadWriteLockAccount());
-        System.out.println("Read-Write-Lock Write Frenzy: " + readWriteLockWriteTime + " ms");
+        // long readWriteLockWriteTime = writeFrenzy(new ReadWriteLockAccount());
+        // System.out.println("Read-Write-Lock Write Frenzy: " + readWriteLockWriteTime + " ms");
+
+        // System.out.println();
+
+        Account from = new ReadWriteLockAccount();
+        from.insert(10);
+        Account to = new ReadWriteLockAccount();
+        to.insert(10);
+        deadlock(from, to, 10);
     }
 }
