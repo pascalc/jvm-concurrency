@@ -43,7 +43,7 @@ class Person extends DefaultActor {
     World world
     String name
     float balance
-    int lifetime = 10
+    int lifetime = 50
 
     // Actions
     boolean deposit(float amount) {
@@ -91,9 +91,10 @@ class Person extends DefaultActor {
 
     // Lifecycle
     void act() {
-        loop(lifetime) {
+        loop({ lifetime > 0 }) {
             transfer(world.randomOther(this), (Math.random()*50).toInteger())
             react { message -> handle(message) }
+            lifetime--
         }
     }
 
@@ -116,3 +117,4 @@ world.join(1, TimeUnit.SECONDS)  // <- Works but times out
 
 println "------------"
 println "Total: " + world[Person].inject(0) { total, person -> total += person.balance }
+world[Person].each { println "$it: $it.lifetime" }
