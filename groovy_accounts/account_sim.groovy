@@ -2,36 +2,27 @@ import java.util.concurrent.TimeUnit
 import groovyx.gpars.actor.DefaultActor
 
 class World {
-    def inhabitants = [:]
+    def members = []
 
     void add(member) { 
         member.world = this
-        inhabitants.get(member.class, []) << member 
+        members << member 
     }
     void leftShift(member) { add(member) }
 
     def randomOther(me) {
         def other = null
         while (true) {
-            def list = inhabitants[me.class]
-            int index = Math.random()*list.size()
-            other = list[index]
+            int index = Math.random()*members.size()
+            other = members[index]
             if (other != me) break
         }
         return other
     }
 
-    def get(type) { inhabitants[type] }
-    def getAt(type) { get(type) }
-
-    void start() {
-        inhabitants.each { it.value*.start() }
-    }
-
-    void join () { inhabitants.each { it.value*.join() } }
-    void join(timeout, unit) {
-        inhabitants.each { it.value*.join(timeout, unit) }
-    }
+    void start() { members*.start() }
+    void join () { members*.join() }
+    void join(timeout, unit) { members*.join(timeout, unit) }
 }
 
 class Person extends DefaultActor {
@@ -116,5 +107,5 @@ world.join(1, TimeUnit.SECONDS)  // <- Works but times out
 // DEADLOCK -> world.join()
 
 println "------------"
-println "Total: " + world[Person].inject(0) { total, person -> total += person.balance }
-world[Person].each { println "$it: $it.lifetime" }
+println "Total: " + world.members.inject(0) { total, person -> total += person.balance }
+world.members.each { println "$it: $it.lifetime" }
