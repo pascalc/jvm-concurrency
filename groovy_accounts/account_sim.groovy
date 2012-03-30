@@ -93,7 +93,9 @@ class Person extends DefaultActor {
         undeliveredMessages.each { handle(it) }
     }
 
-    void onException(Throwable e) {}
+    void onException(Throwable e) {
+        println "Caught $e"
+    }
 
     String toString() { "$name@$world" }
 }
@@ -108,4 +110,4 @@ world.join(1, TimeUnit.SECONDS)  // <- Works but times out
 
 println "------------"
 println "Total: " + world.members.inject(0) { total, person -> total += person.balance }
-world.members.each { println "$it: $it.lifetime" }
+world.members.each { println "$it wasted $it.lifetime turns" }
