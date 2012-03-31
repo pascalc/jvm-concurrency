@@ -148,7 +148,7 @@ class Person extends AccountActor {
     }
 }
 
-Actors.defaultActorPGroup.resize 12
+Actors.defaultActorPGroup.resize 25
 
 World world = new World()
 
