@@ -1,3 +1,6 @@
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.ScheduledThreadPoolExecutor
+
 import groovyx.gpars.actor.Actors
 import groovyx.gpars.actor.DefaultActor
 
@@ -7,6 +10,7 @@ final class Deposit { float amount }
 final class Withdraw { float amount }
 final class Start {}
 final class Stop {}
+final class Tick {}
 
 class World {
     def inhabitants = 
@@ -56,7 +60,10 @@ class World {
 class AccountActor extends DefaultActor {
     String name
     boolean running = false
-    void say(message) { println "${name}: ${message}" }
+    void say(message) { 
+        def host = Thread.currentThread().getName()
+        println "[$host] $name: $message" 
+    }
     void onException(Throwable e) { println "Caught $e" }
     String toString() { "$name" }
 }
@@ -94,22 +101,21 @@ class Broker extends AccountActor {
 }
 
 class Person extends AccountActor {
+    static ScheduledThreadPoolExecutor timer = 
+        new ScheduledThreadPoolExecutor(2)
+
     // State
     World world
     float balance
 
     // Actions
     boolean deposit(float amount) {
-        if (!running) { return }
-
         balance += amount
         say "Deposited $amount, balance is now $balance"
         return true
     }
 
     boolean withdraw(float amount) {
-        if (!running) { return }
-
         if (balance - amount >= 0) {
             balance -= amount
             say "Withdrew $amount, balance is now $balance"
@@ -121,8 +127,6 @@ class Person extends AccountActor {
     }
 
     void requestTransfer() {
-        if (!running) { return }
-
         int amount = Math.random()*100
         def target = world.randomMember(this)
         def broker = world.getBroker()
@@ -134,7 +138,13 @@ class Person extends AccountActor {
         switch(message) {
             case Start:
                 say "Starting"
-                running = true
+                timer.scheduleAtFixedRate(
+                    { send new Tick() },
+                    0, 100, TimeUnit.MILLISECONDS
+                )
+                break
+            case Tick:
+                requestTransfer()
                 break
             case Deposit:
                 reply deposit(message.amount)
@@ -144,22 +154,15 @@ class Person extends AccountActor {
                 break
             case Stop:
                 say "Stopping"
-                running = false
                 break
         }
     }
 
     // Lifecycle
     void act() {
-        loop {
-            Thread.sleep(10)
-            requestTransfer()
-            react { message -> handle(message) }
-        }
+        loop { react { message -> handle(message) } }
     }
 }
-
-Actors.defaultActorPGroup.resize 12
 
 World world = new World()
 
