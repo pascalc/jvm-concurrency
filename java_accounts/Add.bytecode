@@ -1,0 +1,27 @@
+Compiled from "Add.java"
+public class Add extends java.lang.Object{
+public Add();
+  Code:
+   0:	aload_0
+   1:	invokespecial	#1; //Method java/lang/Object."<init>":()V
+   4:	return
+
+public static void main(java.lang.String[]);
+  Code:
+   0:	iconst_0
+   1:	istore_1
+   2:	iload_1
+   3:	iconst_1
+   4:	invokestatic	#2; //Method add:(II)V
+   7:	return
+
+public static void add(int, int);
+  Code:
+   0:	iload_0
+   1:	iload_1
+   2:	iadd
+   3:	istore_0
+   4:	return
+
+}
+

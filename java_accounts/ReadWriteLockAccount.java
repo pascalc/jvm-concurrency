@@ -2,16 +2,18 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ReadWriteLockAccount implements Account {
-    private long balance = 0L;
+    private float balance = 0;
 
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private final Lock readLock = rwl.readLock();
     private final Lock writeLock = rwl.writeLock();
 
-    public long getBalance() throws InterruptedException {
+    public float getBalance() throws InterruptedException {
         readLock.lock();
-        Thread.sleep(10);
-        try { return balance; }
+        try { 
+            Thread.sleep(1);
+            return balance; 
+        }
         finally { readLock.unlock(); }
     }
 
@@ -21,21 +23,27 @@ public class ReadWriteLockAccount implements Account {
         finally { writeLock.unlock(); }
     }
 
-    public void insert(long amount) throws InterruptedException {
+    public boolean deposit(float amount) throws InterruptedException {
         writeLock.lock();
         try {
-            long b = balance;
+            float b = balance;
             Thread.sleep(1);
             balance = b + amount;    
+            return true;
         } finally { writeLock.unlock(); }
     }
 
-    public void withdraw(long amount) throws InterruptedException {
+    public boolean withdraw(float amount) throws InterruptedException {
         writeLock.lock();
         try {
-            long b = balance;
-            Thread.sleep(1);
-            balance = b - amount;
+            if (balance - amount >= 0) {
+                float b = balance;
+                Thread.sleep(1);
+                balance = b - amount;
+                return true;
+            } else {
+                return false;
+            }
         } finally { writeLock.unlock(); }
     }
 }

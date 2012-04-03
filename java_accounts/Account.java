@@ -1,6 +1,6 @@
 public interface Account {
-    public long getBalance() throws InterruptedException;
-    public void insert(long amount) throws InterruptedException;
-    public void withdraw(long amount) throws InterruptedException;
+    public float getBalance() throws InterruptedException;
+    public boolean deposit(float amount) throws InterruptedException;
+    public boolean withdraw(float amount) throws InterruptedException;
     public void clearBalance();
 }

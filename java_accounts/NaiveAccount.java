@@ -1,7 +1,7 @@
 public class NaiveAccount implements Account {
-    private long balance = 0L;
+    private float balance = 0;
 
-    public long getBalance() {
+    public float getBalance() {
         return balance;
     }
 
@@ -9,15 +9,21 @@ public class NaiveAccount implements Account {
         balance = 0;
     }
 
-    public void insert(long amount) throws InterruptedException {
-        long b = balance;
+    public boolean deposit(float amount) throws InterruptedException {
+        float b = balance;
         Thread.sleep(1);
         balance = b + amount;
+        return true;
     }
 
-    public void withdraw(long amount) throws InterruptedException {
-        long b = balance;
-        Thread.sleep(1);
-        balance = b - amount;
+    public boolean withdraw(float amount) throws InterruptedException {
+        if (balance - amount >= 0) {
+            float b = balance;
+            Thread.sleep(1);
+            balance = b - amount;
+            return true;
+        } else {
+            return false;
+        }
     }
 }

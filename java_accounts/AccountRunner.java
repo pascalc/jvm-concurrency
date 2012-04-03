@@ -2,17 +2,48 @@ import java.util.Arrays;
 
 public class AccountRunner {
     
-    public static long[] testCorrectness(Account account) 
+    public static float[] testCorrectnessSingle(Account account) 
     throws InterruptedException {
         final Account a = account;
-        long[] balances = new long[10];
+        a.deposit(10);
+        float[] balances = new float[10];
 
         for (int trial = 0; trial < 10; trial++) {
             Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
                         for (int i =0; i < 10; i++)
-                            a.insert(1);
+                            a.deposit(1);
+                        for (int i =0; i < 10; i++)
+                            a.withdraw(1);
+                    } catch (InterruptedException e) {}
+                }
+            });
+
+            try { 
+                t1.start(); t1.join();
+            } catch(Exception e) {}
+
+            balances[trial] = a.getBalance();
+            a.clearBalance();
+            a.deposit(10);
+        }
+
+        return balances;
+    }
+
+    public static float[] testCorrectnessMulti(Account account) 
+    throws InterruptedException {
+        final Account a = account;
+        a.deposit(10);
+        float[] balances = new float[10];
+
+        for (int trial = 0; trial < 10; trial++) {
+            Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        for (int i =0; i < 10; i++)
+                            a.deposit(1);
                     } catch (InterruptedException e) {}
                 }
             });
@@ -33,12 +64,13 @@ public class AccountRunner {
 
             balances[trial] = a.getBalance();
             a.clearBalance();
+            a.deposit(10);
         }
 
         return balances;
     }
 
-    public static long readFrenzy(Account account) 
+    public static float readFrenzy(Account account) 
     throws InterruptedException {
         final Account a = account;
         Thread[] readers = new Thread[10];
@@ -62,7 +94,7 @@ public class AccountRunner {
             public void run() {
                 for (int i = 0; i < 10; i++) {
                     try {
-                        a.insert(1);
+                        a.deposit(1);
                         Thread.sleep(1);
                     } catch (InterruptedException e) {}
                 }
@@ -82,7 +114,7 @@ public class AccountRunner {
         return timeTaken;
     }
 
-    public static long writeFrenzy(Account account) 
+    public static float writeFrenzy(Account account) 
     throws InterruptedException {
         final Account a = account;
         Thread[] writers = new Thread[10];
@@ -93,7 +125,7 @@ public class AccountRunner {
                 public void run() {
                     for (int i = 0; i < 9; i++) {
                         try {
-                            a.insert(1);
+                            a.deposit(1);
                             Thread.sleep(1);
                         } catch (InterruptedException e) {}
                     }
@@ -127,7 +159,7 @@ public class AccountRunner {
     }
 
     public static void deadlock(final Account from, final Account to,
-        final long amount) throws InterruptedException {
+        final float amount) throws InterruptedException {
         
         Thread[] transferThreads = new Thread[2];
         transferThreads[0] = new Thread(new Runnable() {
@@ -152,50 +184,53 @@ public class AccountRunner {
         }
     }
 
-    private static void transfer(Account from, Account to, long amount) 
+    private static void transfer(Account from, Account to, float amount) 
         throws InterruptedException {
         
         synchronized(from) {
             Thread.sleep(1);
             synchronized(to) {
                 from.withdraw(amount);
-                to.insert(amount);
+                to.deposit(amount);
             }
         }
     }
 
     public static void main(String[] args) throws InterruptedException {
-        // long[] naiveResults = testCorrectness(new NaiveAccount());
-        // System.out.println("Naive Account Results: " + Arrays.toString(naiveResults));
+        // float[] naiveResults = testCorrectnessSingle(new NaiveAccount());
+        // System.out.println("Naive Account Single Threaded Results: " + Arrays.toString(naiveResults));
 
-        // long[] synchronizedResults = testCorrectness(new SynchronizedAccount());
+        // float[] naiveResults2 = testCorrectnessMulti(new NaiveAccount());
+        // System.out.println("Naive Account Multiple Threaded Results: " + Arrays.toString(naiveResults2));
+
+        // float[] synchronizedResults = testCorrectnessMulti(new SynchronizedAccount());
         // System.out.println("Synchronized Account Results: " + Arrays.toString(synchronizedResults));
 
-        // long[] readWriteLockResults = testCorrectness(new ReadWriteLockAccount());
+        // float[] readWriteLockResults = testCorrectnessMulti(new ReadWriteLockAccount());
         // System.out.println("Read-Write-Lock Account Results: " + Arrays.toString(readWriteLockResults));
 
         // System.out.println();
 
-        // long synchronizedReadTime = readFrenzy(new SynchronizedAccount());
+        // float synchronizedReadTime = readFrenzy(new SynchronizedAccount());
         // System.out.println("Synchronized Read Frenzy: " + synchronizedReadTime + " ms");
 
-        // long readWriteLockReadTime = readFrenzy(new ReadWriteLockAccount());
+        // float readWriteLockReadTime = readFrenzy(new ReadWriteLockAccount());
         // System.out.println("Read-Write-Lock Read Frenzy: " + readWriteLockReadTime + " ms");
 
         // System.out.println();
 
-        // long synchronizedWriteTime = writeFrenzy(new SynchronizedAccount());
+        // float synchronizedWriteTime = writeFrenzy(new SynchronizedAccount());
         // System.out.println("Synchronized Write Frenzy: " + synchronizedWriteTime + " ms");
 
-        // long readWriteLockWriteTime = writeFrenzy(new ReadWriteLockAccount());
+        // float readWriteLockWriteTime = writeFrenzy(new ReadWriteLockAccount());
         // System.out.println("Read-Write-Lock Write Frenzy: " + readWriteLockWriteTime + " ms");
 
         // System.out.println();
 
-        Account from = new ReadWriteLockAccount();
-        from.insert(10);
-        Account to = new ReadWriteLockAccount();
-        to.insert(10);
+        Account from = new SynchronizedAccount();
+        from.deposit(10);
+        Account to = new SynchronizedAccount();
+        to.deposit(10);
         deadlock(from, to, 10);
     }
 }

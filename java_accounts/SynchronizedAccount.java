@@ -1,8 +1,8 @@
 public class SynchronizedAccount implements Account {
-    private long balance = 0L;
+    private float balance = 0;
 
-    public synchronized long getBalance() throws InterruptedException{
-        Thread.sleep(10);
+    public synchronized float getBalance() throws InterruptedException{
+        Thread.sleep(1);
         return balance;
     }
 
@@ -10,15 +10,21 @@ public class SynchronizedAccount implements Account {
         balance = 0;
     }
 
-    public synchronized void insert(long amount) throws InterruptedException {
-        long b = balance;
+    public synchronized boolean deposit(float amount) throws InterruptedException {
+        float b = balance;
         Thread.sleep(1);
         balance = b + amount;
+        return true;
     }
 
-    public synchronized void withdraw(long amount) throws InterruptedException {
-        long b = balance;
-        Thread.sleep(1);
-        balance = b - amount;
+    public synchronized boolean withdraw(float amount) throws InterruptedException {
+        if (balance - amount >= 0) {
+            float b = balance;
+            Thread.sleep(1);
+            balance = b - amount;
+            return true;
+        } else {
+            return false;
+        }
     }
 }
