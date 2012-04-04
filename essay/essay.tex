@@ -2,23 +2,25 @@
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
 \usepackage{lmodern}
-\usepackage[latin1]{inputenc}
+\usepackage[utf8x]{inputenc}
 \usepackage[swedish,english]{babel}
 \usepackage{modifications}
 \usepackage{minted}
+% IMPORTANT! This need to be the last package loaded since it overwrites features from others to work correctly
+\usepackage[pdftitle={Pascal Chatterje and Joakim Carselind}, pdfsubject={Bachelors essay 2012 (dkand12) in computer science and communication at Royal Institute of Technology, Stockholm, Sweden}, pdfkeywords={Concurreny,JVM,Java,Groovy,Clojure}, pdftex]{hyperref}
+
 \definecolor{code}{rgb}{0.95,0.95,0.95}
 
 \title{Concurrency on the JVM}
 
-\subtitle{An investigation of strategies for handling concurrency in Java, Clojure and Groovy.}
+\subtitle{An investigation of strategies for handling concurrency in Java, Clojure and Groovy}
           
-\foreigntitle{Lorem ipsum dolor sit amet, sed diam nonummy nibh eui
-              mod tincidunt ut laoreet dol}
+\foreigntitle{En undersökning av strategier för hantering av parallellism i Java, Clojure och Groovy}
               
-\author{Pascal Chatterjee, Joakim Carselind}
+\author{Pascal Chatterjee \and Joakim Carselind}
 \date{April 2012}
 
-\blurb{Bachelor's Thesis at NADA\\Supervisor: Mads Dam\\Examiner: Tjohej}
+\blurb{Bachelor's Thesis at NADA\\Supervisor: Mads Dam\\Examiner: Mårten Björkman}
 \trita{TRITA xxx yyyy-nn}
 
 % Magic
@@ -34,33 +36,17 @@
 \selectlanguage{english}
 
 \begin{abstract}
-  This is a skeleton for KTH theses. More documentation
-  regarding the KTH thesis class file can be found in
-  the package documentation.
+Processors with multiple cores opens up for better utilisation of hardware resources for applications if they take advantage of concurrency and parallelism. There are several methods to reap the benefits of concurrency; software transactional memory, actors and agents, locks and threads. The use of parallelism in programming comes at a price: synchronisation between threads operating on shared memory resources.
 
-Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Mauris
-purus. Fusce tempor. Nulla facilisi. Sed at turpis. Phasellus eu
-ipsum. Nam porttitor laoreet nulla. Phasellus massa massa, auctor
-rutrum, vehicula ut, porttitor a, massa. Pellentesque fringilla. Duis
-nibh risus, venenatis ac, tempor sed, vestibulum at, tellus. Class
-aptent taciti sociosqu ad litora torquent per conubia nostra, per
-inceptos hymenaeos.
+New software libraries and programming language exists to simplify implementation of parallel application and this essay investige strategies on those with the Java Virtual Machine as a commonon denominator: Java, Clojure and Groovy.
 \end{abstract}
 
 \clearpage
 
 \begin{foreignabstract}{swedish}
-  Denna fil ger ett avhandlingsskelett.
-  Mer information om \LaTeX-mallen finns i
-  dokumentationen till paketet.
+  Flerkärniga processorer skapar grund för bättre nyttjande av hårdvaruresurser för applikationer implementerade parallelt. Det existerar ett flertal methoder för att skörda fördelarna av parallelism: software transactional memory, skådespelare och agenter, lås och trådar. Men parallelism har ett pris: att synkronisera trådarna som arbetar på delade minnesresurser.
 
-Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Mauris
-purus. Fusce tempor. Nulla facilisi. Sed at turpis. Phasellus eu
-ipsum. Nam porttitor laoreet nulla. Phasellus massa massa, auctor
-rutrum, vehicula ut, porttitor a, massa. Pellentesque fringilla. Duis
-nibh risus, venenatis ac, tempor sed, vestibulum at, tellus. Class
-aptent taciti sociosqu ad litora torquent per conubia nostra, per
-inceptos hymenaeos.
+  Nya mjukvarubibliotek och programeringsspråk existerar för att förenkla implementationen av parallella applikationer och i denna uppsats undersöker vi de som har en gemensam nämnare Javas virtuella maskin: Java, Clojure och Grooy. 
 \end{foreignabstract}
 
 \clearpage
@@ -149,8 +135,7 @@ All of the concurrency strategies we will discuss in this paper aim to mitigate 
 \part{Threads and Locks}
 
 \section{Background}
-
-\textit{Background about threads (i.e. difference between processes and threads etc) goes here}
+When an application is initiated from the operating system, a process is created to host the application and the process define the address space allocated in the primary memory (random access memory). Typically there are many processes running simultaneously and each process can have multiple threads. A thread performs small tasks for the process and has low overhead for inter-thread communication in contrast to inter-process communication. The low communication overhead is advantageous for parallelism since a process has a well defined address space, threads leap a high risk executing overlapping operations on the same resource, the synchronisation of the resources is crucial.
 
 We will use the example of bank accounts that allow withdrawals, deposits and reading the value of a balance to illustrate the concurrency strategies in this paper. Formally we can view this as an interface, that in Java can be written:
 
@@ -422,4 +407,13 @@ And here is a figure
 \end{figure}
 
 that we refer to here: \ref{RDF_4}
+
+%% This part is for bibtext and references %%
+\newpage
+\renewcommand{\refname}{\section{References}}
+
+\nocite{*}
+\bibliographystyle{ieeetr}
+\bibliography{sources}
+
 \end{document}
