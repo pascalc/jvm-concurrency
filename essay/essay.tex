@@ -9,7 +9,7 @@
 \usepackage{cite}
 %\usepackage{float}
 % IMPORTANT! This need to be the last package loaded since it overwrites features from others to work correctly
-\usepackage[pdftitle={Pascal Chatterje and Joakim Carselind}, pdfsubject={Bachelors essay 2012 (dkand12) in computer science and communication at Royal Institute of Technology, Stockholm, Sweden}, pdfkeywords={Concurreny,JVM,Java,Groovy,Clojure}, pdftex]{hyperref}
+\usepackage[pdfusetitle=true, pdfauthor={Pascal Chatterje and Joakim Carselind}, pdfsubject={Bachelors essay 2012 (dkand12) in computer science and communication at Royal Institute of Technology, Stockholm, Sweden}, pdfkeywords={Concurreny,JVM,Java,Groovy,Clojure}, pdftex]{hyperref}
 
 \definecolor{code}{rgb}{0.95,0.95,0.95}
 
@@ -38,17 +38,13 @@
 \selectlanguage{english}
 
 \begin{abstract}
-Processors with multiple cores opens up for better utilisation of hardware resources for applications if they take advantage of concurrency and parallelism. There are several methods to reap the benefits of concurrency; software transactional memory, actors and agents, locks and threads. The use of parallelism in programming comes at a price: synchronisation between threads operating on shared memory resources.
-
-New software libraries and programming language exists to simplify implementation of parallel application and this essay investigate strategies on those with the Java Virtual Machine as a commonon denominator: Java, Clojure and Groovy.
+    \input{abstract_en}
 \end{abstract}
 
 \clearpage
 
 \begin{foreignabstract}{swedish}
-  Flerkärniga processorer skapar grund för bättre nyttjande av hårdvaruresurser för applikationer implementerade parallelt. Det existerar ett flertal methoder för att skörda fördelarna av parallelism: software transactional memory, skådespelare och agenter, lås och trådar. Men parallelism har ett pris: att synkronisera trådarna som arbetar på delade minnesresurser.
-
-  Nya mjukvarubibliotek och programeringsspråk existerar för att förenkla implementationen av parallella applikationer och i denna uppsats undersöker vi de som har en gemensam nämnare Javas virtuella maskin: Java, Clojure och Grooy. 
+  \input{abstract_sv}
 \end{foreignabstract}
 
 \clearpage
@@ -70,22 +66,7 @@ Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpre
 \part{Introducing concurrency}
 
 \section{Concurrency control} \label{sec:con_con}
-Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems. When modules, regarding level, communicates concurrently there is a risk of the data integrity being violated. The consequence could be that  the system stop working, or even worse continue working without any outer signs of any error ever occurred and deliver an erroneous result. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
-
-Concurrency control in the aspect of transactions defines four important properties that a system must implement to ensure the correctness and data integrity. From a DBMS perspective this equals the constraint on specific tables (read primary key constraint) and constraints across tables (read foreign key constraint). \label{acid}
-\begin{description}
-    \item[Atomicity] either the transaction succeeded or did not happen.
-    \item[Consistency] The data integrity is maintained after transaction is executed regardless if commit or abort was the result.
-    \item[Isolation] from other transactions. Transition states are not visible.
-    \item[Durability] if crash occurs, i.e. commit should persist.
-\end{description}
-
-Concurrency control mechanisms is usually divided into three categories that cover different design methodologies available for overcoming the difficulties of implementing a concurrent application.
-\begin{description}
-    \item[Optimistic] The integrity check is postponed to the very end and is non-blocking. The transaction is being optimistic that the integrity is maintained.
-    \item[Pessimistic] If there is a potential chance of integrity violation, then block that operation.
-    \item[Semi-optimistic (hybrid)] Selective in the aspect of optimistic and pessimistic approach depending on situation.
-\end{description}
+Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems. When modules, regarding level, communicates concurrently there is a risk of the data integrity being violated. The consequence could be that the system stop working or, even worse, continue working without exception. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
 
 \section{Threads}
 A thread is a light weight process with low inter-thread communication overhead. The low utilisation of resources inside the process and low communication overhead is beneficial for an application leveraging concurrency. 
@@ -436,18 +417,53 @@ The use of I/O-operations in transactions is highly discouraged since they bring
 STM enables compisition of atomic operations\cite{cmt} which is not possible to achieve in tradtional lock-based programs. This prove extremely useful when altering high-level data structures, e.g. hash tables, by composing atomic operations such as \texttt{delete} and \texttt{insert} to be executed sequentially. 
 
 \section{Concurrency in Clojure}
-A transaction in Clojure obeys \textbf{atomicity}, \textbf{consistency} and \textbf{isolation} as described in Section~\ref{sec:con_con}. To take advantage of transactions for handling concurrency, one must use \textbf{immutable} and \textbf{persistent} data structures. Appropriately enough, this is the case for \textit{all} data structures in Clojure.
+Clojure provides a separation of value and identity, where an identity could be viewed as time keeper and the values are the previous values, i.e. time that has passed. As time pass, old values (value) are added to a history record, but the time keeper (identity) remains intact and change state to its current time (value). Since the history records consists of just that, history, they are immutable: what has happened has happened. In Clojure all values and structures are, by design, \textbf{immutable} (see Section~\ref{sec:immutability}) and an identity is only subject for mutability inside a \textbf{transaction} (see Section~\ref{sec:transactions}).
 
-The use of persis
+To take advantage of STM transactions in Clojure, one must use immutable and \textbf{persistent} data structures. Appropriately enough, this is the case for \textit{all} data structures in Clojure. The use of persisitent and immutable data structures combined with separation of values and identity creates a high performing concurrency environment\footnote{Highest performance is achieved in environments with high-read and low-write that implies low collision frequency.} without the need of lock-based programming.
 
-\subsection{Immutability}
-An immutable data structure can not be changed, but upon request effectively yields a desired copy. In multi-threaded environments this tremendously simplifies memory control, since the memory is never altered. Think of two single linked list A and B subject for concatenation. To maintain immutability a copy C of A is created and the last element in C points to B. This has no side effects to existing memory resources, which is desirable in concurrent programs.
- 
-\subsection{Transactions} 
-Before a transaction is commited, the data must be in \textbf{consistent} state and hence a validation procedure is required.
+For example, if multiple threads work on different accounts, then there is no need for synchronisation. But as soon as two transactions attempt to modify a shared resource, the \textbf{transaction manager} steps in to ensure consistency and correctnes. After the transaction has completed, the old value will quietly be removed by the garbage collector since there is no reference pointing towards it.
 
-Transactions introduce administrative overhead to maintain the log often clearly visible in systems with few cores\footnote{\url{http://en.wikipedia.org/wiki/Software_transactional_memory}}, but generally this overhead is vastly overcome by the performace gain of abstracting away in-code handling of locks. 
+In Clojure the \texttt{dosync} does the trick to ensure consistency and integrity. The code blocks wrapped in the \texttt{dosync} context is ensured to use correct transaction methodology when altering a value. Lets look at the code:
+\begin{listing}[H]
+    \begin{minted}[linenos=true,bgcolor=code]{clojure}
+; Account manipulation functions
+(defn get-balance [balance]
+    (dosync
+        (. Thread sleep 1)
+        @balance))
 
+(defn insert [balance amount]
+    (dosync
+        (. Thread sleep 1)
+        (alter balance + amount)))
+
+(defn withdraw [balance amount]
+    (dosync
+        (. Thread sleep 1)
+        (alter balance - amount)))
+
+(defn transfer [balance1 balance2 amount]
+    (dosync
+        (withdraw balance1 amount)
+        (. Thread sleep 1)
+        (insert balance2 amount)))
+    \end{minted}
+\end{listing}
+If any thread attempts to do an \texttt{insert} ''behind the back'' (from the transactions perspective) during an ongoing \texttt{withdraw}, the transaction will be aborted by the transaction manager and retried when the data is in a consistent state. 
+
+\subsection{Immutability} \label{sec:immutability}
+An immutable data structure cannot be changed, but upon request effectively yields a desired copy. In multi-threaded environments this tremendously simplifies memory control, since the data structure is never altered. Think of two single linked list A and B subject for concatenation. To maintain immutability a copy C of A is created and the last element in C points to B. This has no side effects to existing memory resources, which is desirable in concurrent programs.
+
+The idea of persistent collections combined with transactions greatly enhance performance. Since each transaction when invoked fetch a copy of the state, copying an persistent collection is quickly executed but implies storage-overhead arguably a fair compromise if the increased concurrency.
+
+\subsection{Transactions} \label{sec:transactions}
+Database transactions obey to atomicity, consitency, isolation and durability\footnote{In concurrency control this is known under the acronym ACID} and for transactions in Clojure the first three are valid. Durability is not an issue since values are stored in volatile memory (RAM).
+
+\begin{description}
+    \item[Atomicity] The transaction was successful or did not happened. This prevents race-conditions to occur.
+    \item[Consistency] The data integrity is maintained after transaction is executed regardless if commit or abort was the result. In case of two simultaneous \texttt{withdraw} and \texttt{deposit} the balance correctly reflects the yielded result from both operations.
+    \item[Isolation] Transition states are not visible to other transactions, only the outcome of an success becomes visible for other transactions.
+\end{description}
 
 Here throw an OutOfMoneyException from withdraw instead of returning false <-- more semantic.
 
@@ -455,6 +471,7 @@ Here throw an OutOfMoneyException from withdraw instead of returning false <-- m
 \section{Agents and STM}
 
 \part{Conclusion}
+Write-skew anomaly, compiler affecting execution, ...
 
 \appendix
 \addappheadtotoc
