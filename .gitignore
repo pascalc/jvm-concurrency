@@ -7,3 +7,6 @@ project_spec*
 topic_choices*
 *.aux
 *.log
+*.bbl
+*.blg
+*.out
