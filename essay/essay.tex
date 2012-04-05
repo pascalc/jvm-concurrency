@@ -19,7 +19,7 @@
           
 \foreigntitle{En undersökning av strategier för hantering av parallellism i Java, Clojure och Groovy}
               
-\author{Pascal Chatterjee \and Joakim Carselind}
+\author{Pascal Chatterjee \and Joakim Carselind \\ \small{\{pascalc, joacar\}@kth.se}}
 \date{April 2012}
 
 \blurb{Bachelor's Thesis at NADA\\Supervisor: Mads Dam\\Examiner: Mårten Björkman}
@@ -48,6 +48,10 @@
 \end{foreignabstract}
 
 \clearpage
+\section{Statement of collaboration}
+hejhopp
+
+\clearpage
 
 \tableofcontents*
 \mainmatter
@@ -66,12 +70,12 @@ Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpre
 \part{Introducing concurrency}
 
 \section{Concurrency control} \label{sec:con_con}
-Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems. When modules, regarding level, communicates concurrently there is a risk of the data integrity being violated. The consequence could be that the system stop working or, even worse, continue working without exception. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
+Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems\cite{concon}. When modules, regarding level, communicates concurrently there is a risk of the data integrity being violated. The consequence could be that the system stop working or, even worse, continue working without exception. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
 
 \section{Threads}
 A thread is a light weight process with low inter-thread communication overhead. The low utilisation of resources inside the process and low communication overhead is beneficial for an application leveraging concurrency. 
 
-The existens of multiple threads inside a process brings up a risk of different threads operating on the same memory resource and due to this synchronisation is important to maintain correctnes in the program. The operations performed by threads \textit{need} to be \textbf{atomic} if they execute code in a \textbf{critical section} in the context of the process memory.
+The existens of multiple threads inside a process brings up a risk of different threads operating on the same memory resource and due to this synchronisation is important to maintain correctnes in the program. The operations performed by threads \textit{need} to be \textbf{atomic} if they execute code in a \textbf{critical section} in the context of the process memory and shared mutuable resources.
 
 \section{Atomicity}
 
@@ -398,6 +402,16 @@ Removing context-specific locking code also enhances the composability of a syst
 \part{ Actors}
 
 \section{Background}
+When using object-oriented programming (OOP), encapsulation of an objects data is of uttermost importance to maintain its internal data integrity. Via instance methods the state of the object can be changed and whilst this work well in a single-threaded environment it fails in multi-threaded environments. Multiple threads might call the instance methods concurrently and jeopordize isolation and consistency. 
+
+Actors provide well definied states, where transition to another and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor respond in one, or more, ways\cite{scalaactors}
+\begin{enumerate}
+ \item Send out messages to known actors, it self included
+ \item Change state and hence behaviour when receiving next message
+ \item Create more actors
+\end{enumerate}
+Above mentioned is typical charateristics of an event-based program and to some extend actors could be viewed as event-based.
+
 \section{A naive version}
 account sim.groovy -> deadlock.
 \section{Introducing brokers}
@@ -405,21 +419,21 @@ account sim.groovy -> deadlock.
 \subsection{Inheritance}
 \subsection{Code reuse}
 \subsection{Problems}
-transfer is a \"fake\" transaction.
+transfer is a ''fake'' transaction.
 
 \part{ Software Transactional Memory}
 
 \section{Background}
 Software transactional memory (STM) is influenced by database transactions and that operations are conceptually \textbf{atomic}. STM provides abstraction of handling in-code synchronisation and provide the appearence that code is executed sequentially. Every transaction maintains a log to track its progress in case it would be \textit{aborted} to enable the operations to be \textit{rollbacked}. If the transaction was successful the operations is \textit{commited} and changes made permanent.
 
-The use of I/O-operations in transactions is highly discouraged since they bring side-effects diffucult to rollback.
+The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback. For example I/O-operations could prove extremely hard to redo and printing to, e.g. a log, could obfuscate the log. Best practice is to schedule operations with side effects in a post-commit section.
 
-STM enables compisition of atomic operations\cite{cmt} which is not possible to achieve in tradtional lock-based programs. This prove extremely useful when altering high-level data structures, e.g. hash tables, by composing atomic operations such as \texttt{delete} and \texttt{insert} to be executed sequentially. 
+STM enables composition of atomic operations\cite{cmt} which is not possible to achieve in tradtional lock-based programs. This prove extremely useful when altering high-level data structures, e.g. hash tables, by composing atomic operations such as \texttt{delete} and \texttt{insert} to be executed sequentially. 
 
 \section{Concurrency in Clojure}
 Clojure provides a separation of value and identity, where an identity could be viewed as time keeper and the values are the previous values, i.e. time that has passed. As time pass, old values (value) are added to a history record, but the time keeper (identity) remains intact and change state to its current time (value). Since the history records consists of just that, history, they are immutable: what has happened has happened. In Clojure all values and structures are, by design, \textbf{immutable} (see Section~\ref{sec:immutability}) and an identity is only subject for mutability inside a \textbf{transaction} (see Section~\ref{sec:transactions}).
 
-To take advantage of STM transactions in Clojure, one must use immutable and \textbf{persistent} data structures. Appropriately enough, this is the case for \textit{all} data structures in Clojure. The use of persisitent and immutable data structures combined with separation of values and identity creates a high performing concurrency environment\footnote{Highest performance is achieved in environments with high-read and low-write that implies low collision frequency.} without the need of lock-based programming.
+To take advantage of STM transactions in Clojure, one must use immutable and \textbf{persistent} data structures\cite{sub11}. Appropriately enough, this is the case for \textit{all} data structures in Clojure. The use of persisitent and immutable data structures combined with separation of values and identity creates a high performing concurrency environment\footnote{Highest performance is achieved in environments with high-read and low-write that implies low collision frequency.} without the need of lock-based programming.
 
 For example, if multiple threads work on different accounts, then there is no need for synchronisation. But as soon as two transactions attempt to modify a shared resource, the \textbf{transaction manager} steps in to ensure consistency and correctnes. After the transaction has completed, the old value will quietly be removed by the garbage collector since there is no reference pointing towards it.
 
@@ -454,7 +468,7 @@ If any thread attempts to do an \texttt{insert} ''behind the back'' (from the tr
 \subsection{Immutability} \label{sec:immutability}
 An immutable data structure cannot be changed, but upon request effectively yields a desired copy. In multi-threaded environments this tremendously simplifies memory control, since the data structure is never altered. Think of two single linked list A and B subject for concatenation. To maintain immutability a copy C of A is created and the last element in C points to B. This has no side effects to existing memory resources, which is desirable in concurrent programs.
 
-The idea of persistent collections combined with transactions greatly enhance performance. Since each transaction when invoked fetch a copy of the state, copying an persistent collection is quickly executed but implies storage-overhead arguably a fair compromise if the increased concurrency.
+The idea of persistent collections combined with transactions greatly enhance performance. Since each transaction when invoked fetch a copy of the state, copying an persistent collection is quickly executed but implies storage-overhead arguably a fair compromise for the increased concurrency.
 
 \subsection{Transactions} \label{sec:transactions}
 Database transactions obey to atomicity, consitency, isolation and durability\footnote{In concurrency control this is known under the acronym ACID} and for transactions in Clojure the first three are valid. Durability is not an issue since values are stored in volatile memory (RAM).
@@ -471,7 +485,7 @@ Here throw an OutOfMoneyException from withdraw instead of returning false <-- m
 \section{Agents and STM}
 
 \part{Conclusion}
-Write-skew anomaly, compiler affecting execution, ...
+Write-skew anomaly, compiler affecting execution, strategies (division of labor, stl, acotrs, ...)
 
 \appendix
 \addappheadtotoc
@@ -490,7 +504,7 @@ that we refer to here: \ref{RDF_4}
 \newpage
 \renewcommand{\refname}{\section{References}}
 
-\nocite{*}
+%\nocite{*}
 \bibliographystyle{ieeetr}
 \bibliography{sources}
 
