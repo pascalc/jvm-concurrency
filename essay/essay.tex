@@ -6,6 +6,8 @@
 \usepackage[swedish,english]{babel}
 \usepackage{modifications}
 \usepackage{minted}
+\usepackage{cite}
+%\usepackage{float}
 % IMPORTANT! This need to be the last package loaded since it overwrites features from others to work correctly
 \usepackage[pdftitle={Pascal Chatterje and Joakim Carselind}, pdfsubject={Bachelors essay 2012 (dkand12) in computer science and communication at Royal Institute of Technology, Stockholm, Sweden}, pdfkeywords={Concurreny,JVM,Java,Groovy,Clojure}, pdftex]{hyperref}
 
@@ -38,7 +40,7 @@
 \begin{abstract}
 Processors with multiple cores opens up for better utilisation of hardware resources for applications if they take advantage of concurrency and parallelism. There are several methods to reap the benefits of concurrency; software transactional memory, actors and agents, locks and threads. The use of parallelism in programming comes at a price: synchronisation between threads operating on shared memory resources.
 
-New software libraries and programming language exists to simplify implementation of parallel application and this essay investige strategies on those with the Java Virtual Machine as a commonon denominator: Java, Clojure and Groovy.
+New software libraries and programming language exists to simplify implementation of parallel application and this essay investigate strategies on those with the Java Virtual Machine as a commonon denominator: Java, Clojure and Groovy.
 \end{abstract}
 
 \clearpage
@@ -57,12 +59,38 @@ New software libraries and programming language exists to simplify implementatio
 \makeatletter\@openrightfalse
 
 \chapter{Introduction}
+More cores let the computer execute instructions like add or move parallel which could increase the performance of a software application. However, the potential performance gain comes with a price namely increased control over synchronisation to prevent memory corruption in shared memory resources. Since traditional sequential execution is, to some extent, abandoned for concurrent execution, a situation arise that could cause the application to behave non-deterministically.
 
-Need for concurrent applications due to more available cores etc etc. Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpreter Lock} (GIL), so we need to use languages such as C/C++/Java to leverage multiple processors. We will focus on the JVM in this paper.
+For this reason, synchronisation plays a crucial role to maintain consistency and correctness in concurrent environments.
+
+The type\footnote{In the aspect of read and write operations or computationally intense} of the application has a significant role when parallel computing is an alternative. The frequency and distribution of opertions is to be taken into account when the architecture is sketched and the solution designed. Applications that consists of mutually exclusive operations such as distributed database queries performs well under concurrency whilst applications tackling a computationally hard problem see no or insignificant performance gain when implemented with a parallel design.
+
+Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpreter Lock} (GIL), so we need to use languages such as C/C++/Java to leverage multiple processors. We will focus on the JVM in this paper.
 
 \part{Introducing concurrency}
 
+\section{Concurrency control} \label{sec:con_con}
+Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems. When modules, regarding level, communicates concurrently there is a risk of the data integrity being violated. The consequence could be that  the system stop working, or even worse continue working without any outer signs of any error ever occurred and deliver an erroneous result. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
+
+Concurrency control in the aspect of transactions defines four important properties that a system must implement to ensure the correctness and data integrity. From a DBMS perspective this equals the constraint on specific tables (read primary key constraint) and constraints across tables (read foreign key constraint). \label{acid}
+\begin{description}
+    \item[Atomicity] either the transaction succeeded or did not happen.
+    \item[Consistency] The data integrity is maintained after transaction is executed regardless if commit or abort was the result.
+    \item[Isolation] from other transactions. Transition states are not visible.
+    \item[Durability] if crash occurs, i.e. commit should persist.
+\end{description}
+
+Concurrency control mechanisms is usually divided into three categories that cover different design methodologies available for overcoming the difficulties of implementing a concurrent application.
+\begin{description}
+    \item[Optimistic] The integrity check is postponed to the very end and is non-blocking. The transaction is being optimistic that the integrity is maintained.
+    \item[Pessimistic] If there is a potential chance of integrity violation, then block that operation.
+    \item[Semi-optimistic (hybrid)] Selective in the aspect of optimistic and pessimistic approach depending on situation.
+\end{description}
+
 \section{Threads}
+A thread is a light weight process with low inter-thread communication overhead. The low utilisation of resources inside the process and low communication overhead is beneficial for an application leveraging concurrency. 
+
+The existens of multiple threads inside a process brings up a risk of different threads operating on the same memory resource and due to this synchronisation is important to maintain correctnes in the program. The operations performed by threads \textit{need} to be \textbf{atomic} if they execute code in a \textbf{critical section} in the context of the process memory.
 
 \section{Atomicity}
 
@@ -130,12 +158,21 @@ Here \texttt{var} is an instance variable. The \texttt{Thread.sleep} at line 4 f
 
 As we can see, after this interleaving of statements, \texttt{var = 1} even though it was incremented \textit{twice}. It is in this way that shared mutable memory, or state, can lead to inconsistent data even though the program logic is correct. We call this phenomenon - when the result of a program is dependent on the sequence or timing of other events - a \textbf{race condition}.
 
+\begin{figure}[H]
+\begin{center}
+    \includegraphics{images/ProcessAndThreads.png}
+\caption{Process and threads synchronisation issue.}\label{fig:pat_sync_issue}
+\end{center}
+\end{figure}
+
 All of the concurrency strategies we will discuss in this paper aim to mitigate the effects of race conditions, and thereby ensure that programs behave in a deterministic way despite the activity of multiple threads. They do this by eliminating one of the factors from \textbf{uncontrolled access to shared, mutable state} that can lead to problems. The first approach we consider, threads and locks, uses locks to \textbf{control access} to shared mutable state.
 
 \part{Threads and Locks}
 
 \section{Background}
-When an application is initiated from the operating system, a process is created to host the application and the process define the address space allocated in the primary memory (random access memory). Typically there are many processes running simultaneously and each process can have multiple threads. A thread performs small tasks for the process and has low overhead for inter-thread communication in contrast to inter-process communication. The low communication overhead is advantageous for parallelism since a process has a well defined address space, threads leap a high risk executing overlapping operations on the same resource, the synchronisation of the resources is crucial.
+When an application is initiated from the operating system, a process is created to host the application and the process define the address space allocated in the primary memory (random access memory). 
+
+Typically there are many processes running simultaneously and each process can have multiple threads. A thread performs small tasks for the process and has low overhead for inter-thread communication in contrast to inter-process communication. The low communication overhead is advantageous for parallelism since a process has a well defined address space, threads leap a high risk executing overlapping operations on the same resource, the synchronisation of the resources is crucial.
 
 We will use the example of bank accounts that allow withdrawals, deposits and reading the value of a balance to illustrate the concurrency strategies in this paper. Formally we can view this as an interface, that in Java can be written:
 
@@ -215,6 +252,14 @@ Now let's see what happens when we run the withdrawals and the deposits in separ
 \end{listing}
 
 Here the final balance ranged between 0 and 20, which is an error of $-10 \leq error \leq 10$. This shows that in some runs all our withdrawals disappeared; in others all our deposits disappeared; and sometimes we saw a mixture of these two extremes. Such disappearances of actions from our results happened when a certain interleaving of statements from the two threads occurred as described in section 1.3.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{lc}    
+    \textbf{Mean} & 11.6 \\
+    \textbf{Deviation} & 7.2 \\ 
+    \end{tabular}
+\end{table}
 
 This makes it very obvious that the \texttt{deposit} and \texttt{withdraw} methods are \textbf{critical sections} - a section of code that should only be executed by one thread at any time. These sections need to be \textbf{mutually exclusive} so that we can reason about their effects as if they were atomic actions. Our problems arise only when a thread context switches while leaving the shared, mutable balance variable in an inconsistent state. 
 
@@ -379,14 +424,30 @@ account sim.groovy -> deadlock.
 \subsection{Inheritance}
 \subsection{Code reuse}
 \subsection{Problems}
-transfer is a "fake" transaction.
+transfer is a \"fake\" transaction.
 
 \part{ Software Transactional Memory}
 
 \section{Background}
+Software transactional memory (STM) is influenced by database transactions and that operations are conceptually \textbf{atomic}. STM provides abstraction of handling in-code synchronisation and provide the appearence that code is executed sequentially. Every transaction maintains a log to track its progress in case it would be \textit{aborted} to enable the operations to be \textit{rollbacked}. If the transaction was successful the operations is \textit{commited} and changes made permanent.
+
+The use of I/O-operations in transactions is highly discouraged since they bring side-effects diffucult to rollback.
+
+STM enables compisition of atomic operations\cite{cmt} which is not possible to achieve in tradtional lock-based programs. This prove extremely useful when altering high-level data structures, e.g. hash tables, by composing atomic operations such as \texttt{delete} and \texttt{insert} to be executed sequentially. 
+
 \section{Concurrency in Clojure}
+A transaction in Clojure obeys \textbf{atomicity}, \textbf{consistency} and \textbf{isolation} as described in Section~\ref{sec:con_con}. To take advantage of transactions for handling concurrency, one must use \textbf{immutable} and \textbf{persistent} data structures. Appropriately enough, this is the case for \textit{all} data structures in Clojure.
+
+The use of persis
+
 \subsection{Immutability}
-\subsection{Transactions}
+An immutable data structure can not be changed, but upon request effectively yields a desired copy. In multi-threaded environments this tremendously simplifies memory control, since the memory is never altered. Think of two single linked list A and B subject for concatenation. To maintain immutability a copy C of A is created and the last element in C points to B. This has no side effects to existing memory resources, which is desirable in concurrent programs.
+ 
+\subsection{Transactions} 
+Before a transaction is commited, the data must be in \textbf{consistent} state and hence a validation procedure is required.
+
+Transactions introduce administrative overhead to maintain the log often clearly visible in systems with few cores\footnote{\url{http://en.wikipedia.org/wiki/Software_transactional_memory}}, but generally this overhead is vastly overcome by the performace gain of abstracting away in-code handling of locks. 
+
 
 Here throw an OutOfMoneyException from withdraw instead of returning false <-- more semantic.
 
