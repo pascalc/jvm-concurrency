@@ -12,6 +12,7 @@
 \usepackage[pdfusetitle=true, pdfauthor={Pascal Chatterje and Joakim Carselind}, pdfsubject={Bachelors essay 2012 (dkand12) in computer science and communication at Royal Institute of Technology, Stockholm, Sweden}, pdfkeywords={Concurreny,JVM,Java,Groovy,Clojure}, pdftex]{hyperref}
 
 \definecolor{code}{rgb}{0.95,0.95,0.95}
+\raggedbottom % force text to top
 
 \title{Concurrency on the JVM}
 
@@ -404,16 +405,21 @@ Removing context-specific locking code also enhances the composability of a syst
 \section{Background}
 When using object-oriented programming (OOP), encapsulation of an objects data is of uttermost importance to maintain its internal data integrity. Via instance methods the state of the object can be changed and whilst this work well in a single-threaded environment it fails in multi-threaded environments. Multiple threads might call the instance methods concurrently and jeopordize isolation and consistency. 
 
-Actors provide well definied states, where transition to another and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor respond in one, or more, ways\cite{scalaactors}
+Actors provide well definied states, where transition to another and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor respond in one, or more, ways \cite{scalaactors}
+
 \begin{enumerate}
- \item Send out messages to known actors, it self included
- \item Change state and hence behaviour when receiving next message
- \item Create more actors
+\item Send out messages to known actors, it self included
+\item Change state and hence behaviour when receiving next message
+\item Create more actors
 \end{enumerate}
+
 Above mentioned is typical charateristics of an event-based program and to some extend actors could be viewed as event-based.
 
+Usually an actor is ''responsible'' for one mutable state and does not conflict with other actors nor their mutable state. From a computataional view, an actor ought to perform an asynchronous task to simple pass the result to a dispatching actor which holds the immutable state. Thinking in an OOP way, each actor is its own lightweight process\footnote{Not a thread inside an applications process' allocated primary memory, rather a ''thread pool dispatcher'' inside the program} designated to perform one task and communicate with immutable messages (not method calls!) to other active actors.
+
 \section{A naive version}
-account sim.groovy -> deadlock.
+An first implementation to tackle the account synchronisation issue does not yield a desirable result. It causes a deadlock mainly due to the implementation of actors as purely thread-based.
+
 \section{Introducing brokers}
 \section{Active Objects}
 \subsection{Inheritance}
@@ -426,14 +432,12 @@ transfer is a ''fake'' transaction.
 \section{Background}
 Software transactional memory (STM) is influenced by database transactions and that operations are conceptually \textbf{atomic}. STM provides abstraction of handling in-code synchronisation and provide the appearence that code is executed sequentially. Every transaction maintains a log to track its progress in case it would be \textit{aborted} to enable the operations to be \textit{rollbacked}. If the transaction was successful the operations is \textit{commited} and changes made permanent.
 
-The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback. For example I/O-operations could prove extremely hard to redo and printing to, e.g. a log, could obfuscate the log. Best practice is to schedule operations with side effects in a post-commit section.
-
 STM enables composition of atomic operations\cite{cmt} which is not possible to achieve in tradtional lock-based programs. This prove extremely useful when altering high-level data structures, e.g. hash tables, by composing atomic operations such as \texttt{delete} and \texttt{insert} to be executed sequentially. 
 
 \section{Concurrency in Clojure}
-Clojure provides a separation of value and identity, where an identity could be viewed as time keeper and the values are the previous values, i.e. time that has passed. As time pass, old values (value) are added to a history record, but the time keeper (identity) remains intact and change state to its current time (value). Since the history records consists of just that, history, they are immutable: what has happened has happened. In Clojure all values and structures are, by design, \textbf{immutable} (see Section~\ref{sec:immutability}) and an identity is only subject for mutability inside a \textbf{transaction} (see Section~\ref{sec:transactions}).
+Clojure provides a separation of value and identity, where an identity could be viewed as time keeper and the values are the previous values, i.e. time that has passed. As time pass, old values (value) are added to a history record, but the time keeper (identity) remains intact and change state to its current time (value). Since the history records consists of just that, history, they are immutable: what has happened has happened. In Clojure all values and collections are, by design, \textbf{immutable} (see Section~\ref{sec:immutability}) and an identity is only subject for mutability inside a \textbf{transaction} (see Section~\ref{sec:transactions}).
 
-To take advantage of STM transactions in Clojure, one must use immutable and \textbf{persistent} data structures\cite{sub11}. Appropriately enough, this is the case for \textit{all} data structures in Clojure. The use of persisitent and immutable data structures combined with separation of values and identity creates a high performing concurrency environment\footnote{Highest performance is achieved in environments with high-read and low-write that implies low collision frequency.} without the need of lock-based programming.
+To take advantage of STM transactions in Clojure, one must use immutable and \textbf{persistent} data structures\cite{sub11}. Appropriately enough, this is the case for \textit{all} collections in Clojure. The use of persisitent and immutable data structures combined with separation of values and identity creates a high performing concurrency environment\footnote{Highest performance is achieved in environments with high-read and low-write that implies low collision frequency.} without the need of lock-based programming.
 
 For example, if multiple threads work on different accounts, then there is no need for synchronisation. But as soon as two transactions attempt to modify a shared resource, the \textbf{transaction manager} steps in to ensure consistency and correctnes. After the transaction has completed, the old value will quietly be removed by the garbage collector since there is no reference pointing towards it.
 
@@ -466,9 +470,9 @@ In Clojure the \texttt{dosync} does the trick to ensure consistency and integrit
 If any thread attempts to do an \texttt{insert} ''behind the back'' (from the transactions perspective) during an ongoing \texttt{withdraw}, the transaction will be aborted by the transaction manager and retried when the data is in a consistent state. 
 
 \subsection{Immutability} \label{sec:immutability}
-An immutable data structure cannot be changed, but upon request effectively yields a desired copy. In multi-threaded environments this tremendously simplifies memory control, since the data structure is never altered. Think of two single linked list A and B subject for concatenation. To maintain immutability a copy C of A is created and the last element in C points to B. This has no side effects to existing memory resources, which is desirable in concurrent programs.
+An immutable data structure cannot be changed, but upon request effectively yields a desired copy: it self! In multi-threaded environments this tremendously simplifies memory control, since the data structure is never altered. Think of two single linked list A and B subject for concatenation. To maintain immutability a copy C of A is created and the last element in C points to B. This has no side effects to existing memory resources, which is desirable in concurrent programs.
 
-The idea of persistent collections combined with transactions greatly enhance performance. Since each transaction when invoked fetch a copy of the state, copying an persistent collection is quickly executed but implies storage-overhead arguably a fair compromise for the increased concurrency.
+The idea of persistent collections combined with transactions greatly enhance performance. Since each transaction when invoked fetch a copy of the state, ''copying'' a persistent collection is quickly executed.
 
 \subsection{Transactions} \label{sec:transactions}
 Database transactions obey to atomicity, consitency, isolation and durability\footnote{In concurrency control this is known under the acronym ACID} and for transactions in Clojure the first three are valid. Durability is not an issue since values are stored in volatile memory (RAM).
@@ -478,6 +482,8 @@ Database transactions obey to atomicity, consitency, isolation and durability\fo
     \item[Consistency] The data integrity is maintained after transaction is executed regardless if commit or abort was the result. In case of two simultaneous \texttt{withdraw} and \texttt{deposit} the balance correctly reflects the yielded result from both operations.
     \item[Isolation] Transition states are not visible to other transactions, only the outcome of an success becomes visible for other transactions.
 \end{description}
+
+The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback \footnote{\url{http://clojure.org/refs}}. For example I/O-operations could prove extremely hard to redo and printing to, e.g. a log, could obfuscate the log. Best practice is to schedule operations with side effects in a post-commit section.
 
 Here throw an OutOfMoneyException from withdraw instead of returning false <-- more semantic.
 
