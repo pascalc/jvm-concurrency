@@ -291,49 +291,7 @@ This has the effect of allowing read operations to execute in parallel while ser
 An implementation of a \texttt{ReadWriteLockAccount} is as follows:
 
  \begin{listing}[H]
-	\begin{minted}[linenos=true,bgcolor=code]{java}
-public class ReadWriteLockAccount implements Account {
-    private float balance = 0;
-    private final ReentrantReadWriteLock rwl = 
-    		new ReentrantReadWriteLock();
-    private final Lock readLock = rwl.readLock();
-    private final Lock writeLock = rwl.writeLock();
-
-    public float getBalance() 
-    throws InterruptedException {
-        readLock.lock();
-        try { 
-            Thread.sleep(1);
-            return balance; 
-        }
-        finally { readLock.unlock(); }
-    }
-
-    public boolean deposit(float amount) 
-    throws InterruptedException {
-        writeLock.lock();
-        try {
-            float b = balance;
-            Thread.sleep(1);
-            balance = b + amount;    
-            return true;
-        } finally { writeLock.unlock(); }
-    }
-
-    public boolean withdraw(float amount)
-    throws InterruptedException {
-        writeLock.lock();
-        try {
-            if (balance - amount >= 0) {
-                float b = balance;
-                Thread.sleep(1);
-                balance = b - amount;
-                return true;
-            } else { return false; }
-        } finally { writeLock.unlock(); }
-    }
-}
-	\end{minted}
+    \inputminted[firstline=4,linenos=true,bgcolor=code]{java}{../java_accounts/ReadWriteLockAccount.java}
 \end{listing}
 
 \subsection{Performance}
@@ -405,7 +363,7 @@ Removing context-specific locking code also enhances the composability of a syst
 \section{Background}
 When using object-oriented programming (OOP), encapsulation of an objects data is of uttermost importance to maintain its internal data integrity. Via instance methods the state of the object can be changed and whilst this work well in a single-threaded environment it fails in multi-threaded environments. Multiple threads might call the instance methods concurrently and jeopordize isolation and consistency. 
 
-Actors provide well definied states, where transition to another and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor respond in one, or more, ways \cite{scalaactors}
+Actors are single-threaded, provide well definied states where transition to a state and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor respond in one, or more, ways \cite{scalaactors}
 
 \begin{enumerate}
 \item Send out messages to known actors, it self included
@@ -413,9 +371,16 @@ Actors provide well definied states, where transition to another and behaviour i
 \item Create more actors
 \end{enumerate}
 
-Above mentioned is typical charateristics of an event-based program and to some extend actors could be viewed as event-based.
+Above mentioned is typical charateristics of an event-based program and to some extend actors could be viewed as event-based as well as thread-based depending on implementation specifics.
 
 Usually an actor is ''responsible'' for one mutable state and does not conflict with other actors nor their mutable state. From a computataional view, an actor ought to perform an asynchronous task to simple pass the result to a dispatching actor which holds the immutable state. Thinking in an OOP way, each actor is its own lightweight process\footnote{Not a thread inside an applications process' allocated primary memory, rather a ''thread pool dispatcher'' inside the program} designated to perform one task and communicate with immutable messages (not method calls!) to other active actors.
+
+\begin{figure}
+    \begin{center}
+    \end{center}
+    \caption{Asynchronous message passing between Actors.}
+    \label{fig:msg_actors}
+\end{figure}
 
 \section{A naive version}
 An first implementation to tackle the account synchronisation issue does not yield a desirable result. It causes a deadlock mainly due to the implementation of actors as purely thread-based.
@@ -497,6 +462,18 @@ Write-skew anomaly, compiler affecting execution, strategies (division of labor,
 \addappheadtotoc
 \chapter{RDF}\label{appA}
 
+\section{Java}
+% \inputminted[linenos=true,bgcolor=code]{java}{../java_accounts/Account.java}
+% \inputminted[linenos=true,bgcolor=code]{java}{../java_accounts/AccountRunner.java}
+% \inputminted[linenos=true,bgcolor=code]{java}{../java_accounts/NaiveAccount.java}
+% \inputminted[linenos=true,bgcolor=code]{java}{../java_accounts/SynchronizedAccount.java}
+% \inputminted[linenos=true,bgcolor=code]{java}{../java_accounts/ReadWriteLockAccount.java}
+
+\section{Clojure}
+% \inputminted[linenos=true,bgcolor=code]{clojure}{../clojure_accounts/accounts.clj}
+
+\section{Groovy}
+
 \begin{figure}[ht]
 \begin{center}
 And here is a figure
@@ -506,7 +483,7 @@ And here is a figure
 
 that we refer to here: \ref{RDF_4}
 
-%% This part is for bibtext and references %%
+%% This part is for bibtex and references %%
 \newpage
 \renewcommand{\refname}{\section{References}}
 
