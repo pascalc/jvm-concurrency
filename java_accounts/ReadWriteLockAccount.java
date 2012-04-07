@@ -4,7 +4,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class ReadWriteLockAccount implements Account {
     private float balance = 0;
 
-    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock rwl = 
+        new ReentrantReadWriteLock();
     private final Lock readLock = rwl.readLock();
     private final Lock writeLock = rwl.writeLock();
 
@@ -23,7 +24,8 @@ public class ReadWriteLockAccount implements Account {
         finally { writeLock.unlock(); }
     }
 
-    public boolean deposit(float amount) throws InterruptedException {
+    public boolean deposit(float amount) 
+    throws InterruptedException {
         writeLock.lock();
         try {
             float b = balance;
@@ -33,7 +35,8 @@ public class ReadWriteLockAccount implements Account {
         } finally { writeLock.unlock(); }
     }
 
-    public boolean withdraw(float amount) throws InterruptedException {
+    public boolean withdraw(float amount) 
+    throws InterruptedException {
         writeLock.lock();
         try {
             if (balance - amount >= 0) {
