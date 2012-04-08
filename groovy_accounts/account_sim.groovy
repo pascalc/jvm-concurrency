@@ -1,3 +1,4 @@
+
 import java.util.concurrent.TimeUnit
 import groovyx.gpars.actor.DefaultActor
 
@@ -50,7 +51,7 @@ class Person extends DefaultActor {
             return true
         } else {
             say "That's more than I have!!"
-            return false
+            return false // throw OutOfMoneyException
         }
     }
 
