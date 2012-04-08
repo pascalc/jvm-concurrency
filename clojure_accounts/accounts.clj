@@ -79,3 +79,45 @@
                 (dothreads! #(transfer balance1 balance2 5) pool :threads 1 :times 1)
                 (dothreads! #(transfer balance2 balance1 5) pool :threads 1 :times 1)))
         (println "Balance1: " @balance1 ", Balance2: " @balance2)))
+
+(defn sleepy-inc [a]
+    (Thread/sleep 1)
+    (inc a))
+
+(defn inc-atom! []
+    (let [x (atom 0)]
+        (println "x: " @x)
+        (do-pool! 10
+            (fn [pool]
+                (dothreads! #(swap! x sleepy-inc) pool :threads 10 :times 1)))
+        (println "x: " @x)))
+
+(defn mk-balance [b]
+    (let [balance (ref b)]
+        (set-validator! balance #(>= % 0))
+        balance))
+
+(defn donate [donor receiver]
+    (dosync 
+        (alter receiver inc)
+        (alter donor dec)))
+
+(defn donation [donor-balances]
+    (let [donors (map mk-balance donor-balances)
+          receiver (mk-balance 0)]
+        (doseq [d donors]  
+            (try 
+                (donate d receiver)
+                (catch IllegalStateException e)))
+        (println "donors:" donors)
+        (println "receiver:" receiver)))
+
+(defn time-agent [times sleep]
+    (let [x (agent 0)]
+        (dotimes [_ times]
+            (send-off x
+                (fn [x]
+                    (Thread/sleep sleep)
+                    (inc x))))
+        (time (await x))
+        @x))
