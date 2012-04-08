@@ -375,17 +375,26 @@ Above mentioned is typical charateristics of an event-based program and to some 
 
 Usually an actor is ''responsible'' for one mutable state and does not conflict with other actors nor their mutable state. From a computataional view, an actor ought to perform an asynchronous task to simple pass the result to a dispatching actor which holds the immutable state. Thinking in an OOP way, each actor is its own lightweight process\footnote{Not a thread inside an applications process' allocated primary memory, rather a ''thread pool dispatcher'' inside the program} designated to perform one task and communicate with immutable messages (not method calls!) to other active actors.
 
-\begin{figure}
+\begin{figure}[H]
     \begin{center}
+    \includegraphics{images/ActorsAdd.png}
     \end{center}
     \caption{Asynchronous message passing between Actors.}
-    \label{fig:msg_actors}
+    \label{fig:actorsAdd}
 \end{figure}
 
 \section{A naive version}
 An first implementation to tackle the account synchronisation issue does not yield a desirable result. It causes a deadlock mainly due to the implementation of actors as purely thread-based.
 
 \section{Introducing brokers}
+
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics{images/ActorsBrooker.png}
+    \end{center}
+    \caption{A dispatching actor (brooker) coordinates messages to prevent deadlocks}
+    \label{fig:actorsBrooker}
+\end{figure}
 \section{Active Objects}
 \subsection{Inheritance}
 \subsection{Code reuse}
@@ -400,9 +409,9 @@ Software transactional memory (STM) is influenced by database transactions and t
 STM enables composition of atomic operations\cite{cmt} which is not possible to achieve in tradtional lock-based programs. This prove extremely useful when altering high-level data structures, e.g. hash tables, by composing atomic operations such as \texttt{delete} and \texttt{insert} to be executed sequentially. 
 
 \section{Concurrency in Clojure}
-Clojure provides a separation of value and identity, where an identity could be viewed as time keeper and the values are the previous values, i.e. time that has passed. As time pass, old values (value) are added to a history record, but the time keeper (identity) remains intact and change state to its current time (value). Since the history records consists of just that, history, they are immutable: what has happened has happened. In Clojure all values and collections are, by design, \textbf{immutable} (see Section~\ref{sec:immutability}) and an identity is only subject for mutability inside a \textbf{transaction} (see Section~\ref{sec:transactions}).
+Clojure provides a separation of value and identity, where an identity could be viewed as an account and the the balance the value. A withdrawal does not change the identity rather it affects its value. The balance prior the withdrawal becomes a record of what the balance at that time and that value is immutable. In Clojure all values and collections are, by design, \textbf{immutable} (see Section~\ref{sec:immutability}) and an identity is only subject for mutability inside a \textbf{transaction} (see Section~\ref{sec:transactions}).
 
-To take advantage of STM transactions in Clojure, one must use immutable and \textbf{persistent} data structures\cite{sub11}. Appropriately enough, this is the case for \textit{all} collections in Clojure. The use of persisitent and immutable data structures combined with separation of values and identity creates a high performing concurrency environment\footnote{Highest performance is achieved in environments with high-read and low-write that implies low collision frequency.} without the need of lock-based programming.
+To take advantage of STM transactions in Clojure, one must use immutable and \textbf{persistent} data structures\cite{sub11}. Appropriately enough, this is the case for \textit{all} collections in Clojure. The STM engine in Clojure use Multiversion concurrency control (MVCC) to tag data with an identifier\footnote{Could be an auto-incremented ID or a timestamp} to track the latest version. MVCC and the use of persistent and immutable data structures combined with separation of values and identity creates a high performing concurrency environment\footnote{Highest performance is achieved in environments with high-read and low-write that implies low collision frequency.} without the need of lock-based programming.
 
 For example, if multiple threads work on different accounts, then there is no need for synchronisation. But as soon as two transactions attempt to modify a shared resource, the \textbf{transaction manager} steps in to ensure consistency and correctnes. After the transaction has completed, the old value will quietly be removed by the garbage collector since there is no reference pointing towards it.
 
@@ -437,7 +446,7 @@ If any thread attempts to do an \texttt{insert} ''behind the back'' (from the tr
 \subsection{Immutability} \label{sec:immutability}
 An immutable data structure cannot be changed, but upon request effectively yields a desired copy: it self! In multi-threaded environments this tremendously simplifies memory control, since the data structure is never altered. Think of two single linked list A and B subject for concatenation. To maintain immutability a copy C of A is created and the last element in C points to B. This has no side effects to existing memory resources, which is desirable in concurrent programs.
 
-The idea of persistent collections combined with transactions greatly enhance performance. Since each transaction when invoked fetch a copy of the state, ''copying'' a persistent collection is quickly executed.
+The idea of persistent collections combined with transactions greatly enhance performance. Since each transaction when invoked fetch a copy of the current state, ''copying'' a persistent collection is quickly executed.
 
 \subsection{Transactions} \label{sec:transactions}
 Database transactions obey to atomicity, consitency, isolation and durability\footnote{In concurrency control this is known under the acronym ACID} and for transactions in Clojure the first three are valid. Durability is not an issue since values are stored in volatile memory (RAM).
@@ -448,9 +457,9 @@ Database transactions obey to atomicity, consitency, isolation and durability\fo
     \item[Isolation] Transition states are not visible to other transactions, only the outcome of an success becomes visible for other transactions.
 \end{description}
 
-The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback \footnote{\url{http://clojure.org/refs}}. For example I/O-operations could prove extremely hard to redo and printing to, e.g. a log, could obfuscate the log. Best practice is to schedule operations with side effects in a post-commit section.
+The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback \footnote{\url{http://clojure.org/refs}}. For example I/O-operations could prove extremely hard to redo and printing to e.g. a log could obfuscate it. Best practice is to schedule operations with side effects in a post-commit section.
 
-Here throw an OutOfMoneyException from withdraw instead of returning false <-- more semantic.
+MVCC tag the data with a read and write timestamp to keep track of the current version. When a write transaction $T_i$ is started the latest version of the data is available as a snapshot with a timestamp $TS(T_i)$. If another write transaction $T_j$ is running, there must exist a timestamped version $TS(T_j)$ where $TS(T_i) \le TS(T_j)$ to complete and for $T_i$ to commit. Otherwise $T_i$ is aborted and any changes rollbacked. This ensures consistency as well as isolation since each transaction work with its own snapshot.
 
 \section{Agents}
 \section{Agents and STM}
@@ -458,10 +467,10 @@ Here throw an OutOfMoneyException from withdraw instead of returning false <-- m
 \part{Discussion}
 Write-skew anomaly, compiler affecting execution, strategies (division of labor, stl, acotrs, ...)
 
-\part{Conclusion}
-The emerging trend of concurrency to speed up execution of applications and for managing distributed computing paved the way to find a stable and scalable way of implementing concurrency. Our investigation has, in our opinion, shown that a combination of actors and STM on the solid foundation provided by JVM make life easy (well, easier at least) to reap the benefits of concurrency.
+\part{ Conclusion}
+The emerging trend of concurrency to speed up execution of applications and for managing distributed computing paved the way to find a stable and scalable way of implementing concurrency. Our investigation has, in our opinion, shown that a combination of actors and STM implemented in Clojure on the solid foundation provided by JVM make life easy (well, easier at least) to reap the benefits of concurrency.
 
-The combination of actors and STM provides, in a concise, beatiful and efficient way, abstraction to decouple the logical behaviour of the application and the parallel execution so that the programmer can focus on creating a robust and scalable application. Nevertheless the programmer need to possess knowledge about resource mutability and memory allocation at run time to achieve truly leverage concurrency.
+The combination of actors and STM provides, in a concise, beatiful and efficient way, abstraction to decouple the logical behaviour of the application and the parallel execution so that the programmer can focus on creating a robust and scalable application. Nevertheless the programmer need to possess knowledge about resource mutability and memory allocation at run time to truly leverage concurrency.
 
 The abstraction level of actors and STM leads to reduce the amount of code written and complexity which has advantegous implications; low maintenance, timesaving and less error prone programming. The account implementation in Clojure confirms our finding and give weight to our conclusion. As C.A.R Hoare (Tony Hoare) once said:
 \begin{quote}
