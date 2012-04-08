@@ -455,8 +455,18 @@ Here throw an OutOfMoneyException from withdraw instead of returning false <-- m
 \section{Agents}
 \section{Agents and STM}
 
-\part{Conclusion}
+\part{Discussion}
 Write-skew anomaly, compiler affecting execution, strategies (division of labor, stl, acotrs, ...)
+
+\part{Conclusion}
+The emerging trend of concurrency to speed up execution of applications and for managing distributed computing paved the way to find a stable and scalable way of implementing concurrency. Our investigation has, in our opinion, shown that a combination of actors and STM on the solid foundation provided by JVM make life easy (well, easier at least) to reap the benefits of concurrency.
+
+The combination of actors and STM provides, in a concise, beatiful and efficient way, abstraction to decouple the logical behaviour of the application and the parallel execution so that the programmer can focus on creating a robust and scalable application. Nevertheless the programmer need to possess knowledge about resource mutability and memory allocation at run time to achieve truly leverage concurrency.
+
+The abstraction level of actors and STM leads to reduce the amount of code written and complexity which has advantegous implications; low maintenance, timesaving and less error prone programming. The account implementation in Clojure confirms our finding and give weight to our conclusion. As C.A.R Hoare (Tony Hoare) once said:
+\begin{quote}
+''There are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies, and the other way is to make it so complicated that there are no obvious deficiencies.''\footnote{\url{http://en.wikiquote.org/wiki/C._A._R._Hoare}}
+\end{quote}
 
 \appendix
 \addappheadtotoc
