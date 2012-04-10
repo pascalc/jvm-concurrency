@@ -7,6 +7,7 @@
 \usepackage{modifications}
 \usepackage{minted}
 \usepackage{cite}
+\usepackage{graphicx}
 %\usepackage{float}
 % IMPORTANT! This need to be the last package loaded since it overwrites features from others to work correctly
 \usepackage[pdfusetitle=true, pdfauthor={Pascal Chatterje and Joakim Carselind}, pdfsubject={Bachelors essay 2012 (dkand12) in computer science and communication at Royal Institute of Technology, Stockholm, Sweden}, pdfkeywords={Concurreny,JVM,Java,Groovy,Clojure}, pdftex]{hyperref}
@@ -460,6 +461,16 @@ Database transactions obey to atomicity, consitency, isolation and durability\fo
 The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback \footnote{\url{http://clojure.org/refs}}. For example I/O-operations could prove extremely hard to redo and printing to e.g. a log could obfuscate it. Best practice is to schedule operations with side effects in a post-commit section.
 
 MVCC tag the data with a read and write timestamp to keep track of the current version. When a write transaction $T_i$ is started the latest version of the data is available as a snapshot with a timestamp $TS(T_i)$. If another write transaction $T_j$ is running, there must exist a timestamped version $TS(T_j)$ where $TS(T_i) \le TS(T_j)$ to complete and for $T_i$ to commit. Otherwise $T_i$ is aborted and any changes rollbacked. This ensures consistency as well as isolation since each transaction work with its own snapshot.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{images/TransactionWriteCollision.png}
+\caption{A write collision when inserting element in a linked list}
+\label{fig:twc}
+\end{figure}
+
+Looking at the illustration Figure~\ref{fig:twc} of a write collision that occur when $T_2$ tries to insert an element before $T_1$ has successfully commited, $T_2$ silently aborts and retry the insert operation with a fresh snapshot reflecting the changes made by $T_1$.
+
 
 \section{Agents}
 \section{Agents and STM}
