@@ -50,10 +50,6 @@
 \end{foreignabstract}
 
 \clearpage
-\section{Statement of collaboration}
-hejhopp
-
-\clearpage
 
 \tableofcontents*
 \mainmatter
@@ -61,13 +57,23 @@ hejhopp
 \makeatletter\@openrightfalse
 
 \chapter{Introduction}
+
+\section{Statement of collaboration}
+The code included in appendix and elsewhere is a product of Pascal Chatterjee and figures are a product of Joakim Carselind. The text is a collaborative outcome of our findings performing the practical investigation and deepening our knowledge by reading papers, articles and books in the subject of concurrency and related subjects.
+
+\section{Problem statement}
+To reach better utilisation of hardware resources, an increasing key factor for companies providing IT solutions in order to be competetive and profitable, one must leverage the full potential of multi-core processors. The rapid development of distributed computing and concurrent applications require robust and scalable software architecture to reap the benefits from concurrency.
+
+In the area of concurrency, not all programming languages provide sufficient support for concurrent execution and those that do: which is most appropriate to use?
+
+\section{Introduction}
 More cores let the computer execute instructions like add or move parallel which could increase the performance of a software application. However, the potential performance gain comes with a price namely increased control over synchronisation to prevent memory corruption in shared memory resources. Since traditional sequential execution is, to some extent, abandoned for concurrent execution, a situation arise that could cause the application to behave non-deterministically.
 
 For this reason, synchronisation plays a crucial role to maintain consistency and correctness in concurrent environments.
 
 The type\footnote{In the aspect of read and write operations or computationally intense} of the application has a significant role when parallel computing is an alternative. The frequency and distribution of opertions is to be taken into account when the architecture is sketched and the solution designed. Applications that consists of mutually exclusive operations such as distributed database queries performs well under concurrency whilst applications tackling a computationally hard problem see no or insignificant performance gain when implemented with a parallel design.
 
-Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpreter Lock} (GIL), so we need to use languages such as C/C++/Java to leverage multiple processors. We will focus on the JVM in this paper.
+Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpreter Lock} (GIL), so we need to use languages such as C/C++/Java to leverage multiple processors. We will focus on the JVM in this paper.  
 
 \part{Introducing concurrency}
 
@@ -358,6 +364,7 @@ This dangerous juggling of locks is possibly the greatest problem that arises wh
 \part{ Actors}
 
 \section{Background}
+
 When using object-oriented programming (OOP), encapsulation of an objects data is of uttermost importance to maintain its internal data integrity. Via instance methods the state of the object can be changed and whilst this work well in a single-threaded environment it fails in multi-threaded environments. Multiple threads might call the instance methods concurrently and jeopordize isolation and consistency. 
 
 Actors are single-threaded, provide well definied states where transition to a state and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor respond in one, or more, ways \cite{scalaactors}
@@ -503,17 +510,17 @@ This illustrates one of the biggest pitfalls of actor-based systems: as soon as 
 
 \section{Introducing brokers}
 
+It seems that we gave our Person actors a little too much responsibility in our first implementation. Allowing them to handle \texttt{Withdraw} and \texttt{Deposit} messages seems natural, but when we made them handle transfers themselves we ran into trouble.
+
+In this version of the simulation we will introduce a new actor, called a \texttt{Broker}, that has the sole purpose of handling transfers between Persons. By extracting the transfer logic from the Person class, we allow Persons to simply \texttt{react} to \texttt{Withdraw} and \texttt{Deposit} messages, thereby eliminating our case of deadlock. 
+
 \begin{figure}[H]
     \begin{center}
     \includegraphics{images/ActorsBrooker.png}
     \end{center}
-    \caption{A dispatching actor (brooker) coordinates messages to prevent deadlocks}
+    \caption{A Brooker coordinates messages to prevent deadlocks.}
     \label{fig:actorsBrooker}
 \end{figure}
-
-It seems that we gave our Person actors a little too much responsibility in our first implementation. Allowing them to handle \texttt{Withdraw} and \texttt{Deposit} messages seems natural, but when we made them handle transfers themselves we ran into trouble.
-
-In this version of the simulation we will introduce a new actor, called a \texttt{Broker}, that has the sole purpose of handling transfers between Persons. By extracting the transfer logic from the Person class, we allow Persons to simply \texttt{react} to \texttt{Withdraw} and \texttt{Deposit} messages, thereby eliminating our case of deadlock. 
 
 \subsection{Messages}
 
@@ -728,7 +735,7 @@ Clojure is the third JVM language we will use. Unlike the object-oriented Java a
 
 Clojure provides a separation of value and identity, where an identity could be viewed as an account and the the balance the value. A withdrawal does not change the identity rather it affects its value. The balance prior the withdrawal becomes a record of what the balance at that time and that value is immutable. In Clojure all values and collections are, by design, \textbf{immutable} (see Section~\ref{sec:immutability}) and an identity is only subject for mutability inside a \textbf{transaction} (see Section~\ref{sec:transactions}).
 
-\subsection{Transactions} \label{sec:transactions}
+\subsection{Transactions}
 Database transactions obey to atomicity, consitency, isolation and durability\footnote{In concurrency control this is known under the acronym ACID} and for transactions in Clojure the first three are valid. Durability is not an issue since values are stored in volatile memory (RAM).
 
 \begin{description}
@@ -992,7 +999,7 @@ accounts=> @x ; 12 seconds later
 
 Not only does this show that agents are indeed asynchronous, but we also see that we can dereference them to get their value while they are processing messages, in constant time.
 
-This is a result of Clojure's reference type semantics - we don't need to use a function to get an agent's value as functions are solely for state transitions, which is not what a read-value-function represents. Instead, as reference types are designed to be state machines, dereferencing can be supported as a "special case" operation for returning a machine's current state.
+This is a result of Clojure's reference type semantics - we don't need to use a function to get an agent's value as functions are solely for state transitions, which is not what a read-value-function represents. Instead, as reference types are designed to be state machines, dereferencing can be supported as a ''special case'' operation for returning a machine's current state.
 
 \subsubsection{Flexibility}
 
@@ -1193,20 +1200,11 @@ Given all these options, and a clean and powerful set of abstractions in which t
 
 \section{Groovy}
 
-\begin{figure}[ht]
-\begin{center}
-And here is a figure
-\caption{\small{Several statements describing the same resource.}}\label{RDF_4}
-\end{center}
-\end{figure}
-
-that we refer to here: \ref{RDF_4}
-
 %% This part is for bibtex and references %%
-\newpage
-\renewcommand{\refname}{\section{References}}
+% \newpage
+% \renewcommand{\refname}{\section{References}}
 
-%\nocite{*}
+%\nocite{*} % list all of the content in .bib
 \bibliographystyle{ieeetr}
 \bibliography{sources}
 
