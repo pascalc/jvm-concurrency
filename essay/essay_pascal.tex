@@ -2,30 +2,24 @@
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
 \usepackage{lmodern}
-\usepackage[utf8x]{inputenc}
+\usepackage[latin1]{inputenc}
 \usepackage[swedish,english]{babel}
 \usepackage{modifications}
 \usepackage{minted}
-\usepackage{cite}
-\usepackage{graphicx}
-%\usepackage{float}
-% IMPORTANT! This need to be the last package loaded since it overwrites features from others to work correctly
-\usepackage[pdfusetitle=true, pdfauthor={Pascal Chatterjee and Joakim Carselind}, pdfsubject={Bachelors essay 2012 (dkand12) in computer science and communication at Royal Institute of Technology, Stockholm, Sweden}, pdfkeywords={Concurreny,JVM,Java,Groovy,Clojure}, pdftex]{hyperref}
-
 \definecolor{code}{rgb}{0.95,0.95,0.95}
-\raggedbottom % force text to top
 
 \title{Concurrency on the JVM}
 
-\subtitle{An investigation of strategies for handling concurrency in Java, Clojure and Groovy}
+\subtitle{An investigation of strategies for handling concurrency in Java, Clojure and Groovy.}
           
-\foreigntitle{En undersökning av strategier för hantering av parallellism i Java, Clojure och Groovy}
+\foreigntitle{Lorem ipsum dolor sit amet, sed diam nonummy nibh eui
+              mod tincidunt ut laoreet dol}
               
-\author{Pascal Chatterjee \and Joakim Carselind \\ \small{\{pascalc, joacar\}@kth.se}}
+\author{Pascal Chatterjee, Joakim Carselind}
 \date{April 2012}
 
-\blurb{Bachelor's Thesis at NADA\\Supervisor: Mads Dam\\Examiner: Mårten Björkman}
-\trita{TRITA xxx 2012-nn}
+\blurb{Bachelor's Thesis at NADA\\Supervisor: Mads Dam\\Examiner: Tjohej}
+\trita{TRITA xxx yyyy-nn}
 
 % Magic
 \makeatletter\@addtoreset{section}{part}\makeatother%
@@ -40,13 +34,33 @@
 \selectlanguage{english}
 
 \begin{abstract}
-    \input{abstract_en}
+  This is a skeleton for KTH theses. More documentation
+  regarding the KTH thesis class file can be found in
+  the package documentation.
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Mauris
+purus. Fusce tempor. Nulla facilisi. Sed at turpis. Phasellus eu
+ipsum. Nam porttitor laoreet nulla. Phasellus massa massa, auctor
+rutrum, vehicula ut, porttitor a, massa. Pellentesque fringilla. Duis
+nibh risus, venenatis ac, tempor sed, vestibulum at, tellus. Class
+aptent taciti sociosqu ad litora torquent per conubia nostra, per
+inceptos hymenaeos.
 \end{abstract}
 
 \clearpage
 
 \begin{foreignabstract}{swedish}
-  \input{abstract_sv}
+  Denna fil ger ett avhandlingsskelett.
+  Mer information om \LaTeX-mallen finns i
+  dokumentationen till paketet.
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Mauris
+purus. Fusce tempor. Nulla facilisi. Sed at turpis. Phasellus eu
+ipsum. Nam porttitor laoreet nulla. Phasellus massa massa, auctor
+rutrum, vehicula ut, porttitor a, massa. Pellentesque fringilla. Duis
+nibh risus, venenatis ac, tempor sed, vestibulum at, tellus. Class
+aptent taciti sociosqu ad litora torquent per conubia nostra, per
+inceptos hymenaeos.
 \end{foreignabstract}
 
 \clearpage
@@ -58,36 +72,15 @@
 
 \chapter{Introduction}
 
-\section{Statement of collaboration}
-The code included in appendix and elsewhere is a product of Pascal Chatterjee and figures are a product of Joakim Carselind. The text is a collaborative outcome of our findings performing the practical investigation and deepening our knowledge by reading papers, articles and books in the subject of concurrency and related subjects.
-
-\section{Problem statement}
-To reach better utilisation of hardware resources, an increasing key factor for companies providing IT solutions in order to be competetive and profitable, one must leverage the full potential of multi-core processors. The rapid development of distributed computing and concurrent applications require robust and scalable software architecture to reap the benefits from concurrency.
-
-In the area of concurrency, not all programming languages provide sufficient support for concurrent execution and those that do: which is most appropriate to use?
-
-\section{Introduction}
-More cores let the computer execute instructions like add or move parallel which could increase the performance of a software application. However, the potential performance gain comes with a price namely increased control over synchronisation to prevent memory corruption in shared memory resources. Since traditional sequential execution is, to some extent, abandoned for concurrent execution, a situation arise that could cause the application to behave non-deterministically.
-
-For this reason, synchronisation plays a crucial role to maintain consistency and correctness in concurrent environments.
-
-The type\footnote{In the aspect of read and write operations or computationally intense} of the application has a significant role when parallel computing is an alternative. The frequency and distribution of opertions is to be taken into account when the architecture is sketched and the solution designed. Applications that consists of mutually exclusive operations such as distributed database queries performs well under concurrency whilst applications tackling a computationally hard problem see no or insignificant performance gain when implemented with a parallel design.
-
-Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpreter Lock} (GIL), so we need to use languages such as C/C++/Java to leverage multiple processors. We will focus on the JVM in this paper.  
+Need for concurrent applications due to more available cores etc etc. Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpreter Lock} (GIL), so we need to use languages such as C/C++/Java to leverage multiple processors. We will focus on the JVM in this paper.
 
 \part{Introducing concurrency}
 
-\section{Concurrency control} \label{sec:con_con}
-Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems\cite{concon}. When modules, regarding level, communicates concurrently there is a risk of the data integrity being violated. The consequence could be that the system stop working or, even worse, continue working without exception. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
-
 \section{Threads}
-A thread is a light weight process with low inter-thread communication overhead. The low utilisation of resources inside the process and low communication overhead is beneficial for an application leveraging concurrency. 
-
-The existence of multiple threads inside a process brings up a risk of different threads operating on the same memory resource and due to this synchronisation is important to maintain correctness. The operations performed by threads \textit{need} to be \textbf{atomic} if they execute code in a \textbf{critical section} in the context of the process memory and shared mutuable resources.
 
 \section{Atomicity}
 
-One of the first things we should realise when writing concurrent programs is that most of the statements we use are \textit{not} \textbf{atomic}. This means that although we tend to think of them as indivisible units of computation, they expand to multiple instructions when compiled to bytecode. It is these instructions that are atomic, not the statements we write in high-level JVM languages.
+One of the first things we should realise when writing concurrent programs is that most of the statements we use are not \textbf{atomic}. This means that although we tend to think of them as indivisible units of computation, they expand to multiple instructions when compiled to bytecode. It is these instructions that are atomic, not the statements we write in high-level JVM languages.
 
 Let us take the simple example of incrementing an integer variable. In Java, we could write the function:
 
@@ -151,21 +144,13 @@ Here \texttt{var} is an instance variable. The \texttt{Thread.sleep} at line 4 f
 
 As we can see, after this interleaving of statements, \texttt{var = 1} even though it was incremented \textit{twice}. It is in this way that shared mutable memory, or state, can lead to inconsistent data even though the program logic is correct. We call this phenomenon - when the result of a program is dependent on the sequence or timing of other events - a \textbf{race condition}.
 
-\begin{figure}[H]
-\begin{center}
-    \includegraphics{images/ProcessAndThreads.png}
-\caption{Process and threads synchronisation issue.}\label{fig:pat_sync_issue}
-\end{center}
-\end{figure}
-
 All of the concurrency strategies we will discuss in this paper aim to mitigate the effects of race conditions, and thereby ensure that programs behave in a deterministic way despite the activity of multiple threads. They do this by eliminating one of the factors from \textbf{uncontrolled access to shared, mutable state} that can lead to problems. The first approach we consider, threads and locks, uses locks to \textbf{control access} to shared mutable state.
 
 \part{Threads and Locks}
 
 \section{Background}
-When an application is initiated from the operating system, a process is created to host the application and it is allocated working primary memory (random access memory). 
 
-Typically there are many processes running simultaneously and each process can have multiple threads. A thread performs small tasks for the process and has low overhead for inter-thread communication (usually carried out in shared memory) in contrast to inter-process communication. The low communication overhead is advantageous for parallelism since a process has a well defined address space, threads run a high risk of executing overlapping operations on the same resource, the synchronisation of the resources is crucial.
+\textit{Background about threads (i.e. difference between processes and threads etc) goes here}
 
 We will use the example of bank accounts that allow withdrawals, deposits and reading the value of a balance to illustrate the concurrency strategies in this paper. Formally we can view this as an interface, that in Java can be written:
 
@@ -246,14 +231,6 @@ Now let's see what happens when we run the withdrawals and the deposits in separ
 
 Here the final balance ranged between 0 and 20, which is an error of $-10 \leq error \leq 10$. This shows that in some runs all our withdrawals disappeared; in others all our deposits disappeared; and sometimes we saw a mixture of these two extremes. Such disappearances of actions from our results happened when a certain interleaving of statements from the two threads occurred as described in section 1.3.
 
-\begin{table}[h]
-    \centering
-    \begin{tabular}{lc}    
-    \textbf{Mean} & 11.6 \\
-    \textbf{Deviation} & 7.2 \\ 
-    \end{tabular}
-\end{table}
-
 This makes it very obvious that the \texttt{deposit} and \texttt{withdraw} methods are \textbf{critical sections} - a section of code that should only be executed by one thread at any time. These sections need to be \textbf{mutually exclusive} so that we can reason about their effects as if they were atomic actions. Our problems arise only when a thread context switches while leaving the shared, mutable balance variable in an inconsistent state. 
 
 \section{Locking with \texttt{synchronized}}
@@ -298,7 +275,49 @@ This has the effect of allowing read operations to execute in parallel while ser
 An implementation of a \texttt{ReadWriteLockAccount} is as follows:
 
  \begin{listing}[H]
-    \inputminted[firstline=4,linenos=true,bgcolor=code]{java}{../java_accounts/ReadWriteLockAccount.java}
+	\begin{minted}[linenos=true,bgcolor=code]{java}
+public class ReadWriteLockAccount implements Account {
+    private float balance = 0;
+    private final ReentrantReadWriteLock rwl = 
+    		new ReentrantReadWriteLock();
+    private final Lock readLock = rwl.readLock();
+    private final Lock writeLock = rwl.writeLock();
+
+    public float getBalance() 
+    throws InterruptedException {
+        readLock.lock();
+        try { 
+            Thread.sleep(1);
+            return balance; 
+        }
+        finally { readLock.unlock(); }
+    }
+
+    public boolean deposit(float amount) 
+    throws InterruptedException {
+        writeLock.lock();
+        try {
+            float b = balance;
+            Thread.sleep(1);
+            balance = b + amount;    
+            return true;
+        } finally { writeLock.unlock(); }
+    }
+
+    public boolean withdraw(float amount)
+    throws InterruptedException {
+        writeLock.lock();
+        try {
+            if (balance - amount >= 0) {
+                float b = balance;
+                Thread.sleep(1);
+                balance = b - amount;
+                return true;
+            } else { return false; }
+        } finally { writeLock.unlock(); }
+    }
+}
+	\end{minted}
 \end{listing}
 
 \subsection{Performance}
@@ -324,11 +343,11 @@ More flexible languages than Java combat this problem by using macros and higher
 
 \section{Transfers}
 
-Now that we have a correct and performant account implementation, our job seems to be done. As before, things are not quite so simple. Our latest account implementation appears to work in isolation, but things can get trickier when we bring multiple Accounts into the mix.
+Now that we have a correct and performant Account implementation, our job seems to be done. As before, things are not quite so simple. Our latest Account implementation appears to work in isolation, but things can get trickier when we bring multiple Accounts into the mix.
 
-Let us imagine that we want to transfer funds between accounts. A \texttt{transfer} method could be defined in some sort of \texttt{AccountTransferService} class, which would take two \texttt{Accounts} and an amount as input, withdraw \texttt{amount} from the first \texttt{Account}, and then deposit \texttt{amount} in the second \texttt{Account}. These \texttt{transfer}s are also critical sections, as accounts should not be altered or read mid-transfer as they are in an inconsistent state.
+Let us imagine that we want to transfer funds between Accounts. A \texttt{transfer} method could be defined in some sort of \texttt{AccountTransferService} class, which would take 2 Accounts and an amount as input, withdraw \texttt{amount} from the first Account, and then deposit \texttt{amount} in the second Account. These \texttt{transfer}s are also critical sections, as Accounts should not be altered or read mid-transfer as they are in an inconsistent state.
 
-To ensure the integrity of this critical section we have to acquire locks on both accounts, carry out the transfer, and then release the lock. The object monitor version is shown below (an explicit lock version would acquire the objects' write-locks instead):
+To ensure the integrity of this critical section we have to acquire locks on both Accounts, carry out the transfer, and then release the lock. The object monitor version is shown below (an explicit lock version would acquire the objects' write-locks instead):
 
 \begin{listing}[H]
 	\begin{minted}[linenos=true,bgcolor=code]{java}
@@ -361,30 +380,15 @@ As both transfers are waiting for each other, their threads will block indefinit
 
 This dangerous juggling of locks is possibly the greatest problem that arises when using Threads and Locks to manage concurrency. Other concurrency strategies like the ones we will discuss later abstract away the handling of locks, meaning that it is much harder to make mistakes involving them.
 
+\section{Composability / Reuse}
+
+Removing context-specific locking code also enhances the composability of a system and encourages code reuse etc etc.
+
 \part{ Actors}
 
 \section{Background}
-The original theory of actors is modeled from biology, more precise the autonomous and independent communication between human cells\footnote{''I thought of objects being like biological cells and/or individual computers on a network, only able to communicate with messages''--Alan Kay, creator of Smalltalk, on the meaning of ''object oriented programming''} that are inherently concurrent. As with cells, an actor is, from a higher-level perspective of concurrency, viewed as an independent entity with its own memory, processor and communication channels. An actor in the context of a software system has similar features - its own memory (shared), its own processor (thread) and its own asynchronous way of communicating (messages).
 
-When using object-oriented programming (OOP), encapsulation of an objects data is of uttermost importance to maintain its internal data integrity. Via instance methods the state of the object can be changed and whilst this work well in a single-threaded environment it fails in multi-threaded environments. Multiple threads might call the instance methods concurrently and jeopardize isolation and consistency. 
-
-Actors are single-threaded, provide well definied states where transition to a state and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor responds in one, or more, ways \cite{HO09}
-
-\begin{enumerate}
-\item Send out messages to known actors, it self included
-\item Change state and hence behaviour when receiving next message
-\item Create more actors
-\end{enumerate}
-
-Usually an actor is ''responsible'' for one mutable state and does not conflict with other actors nor their mutable state. From a computatational view, an actor ought to perform an asynchronous task simplifying the coordination of results. Thinking in an OOP way, each actor is its own lightweight process\footnote{Not an actual thread, rather a virtual thread that is allocated a real one on demand.} designated to perform one task and communicate with immutable messages (not method calls!) to other active actors.
-
-\begin{figure}[H]
-    \begin{center}
-    \includegraphics{images/ActorsAdd.png}
-    \end{center}
-    \caption{Asynchronous message passing between Actors.}
-    \label{fig:actorsAdd}
-\end{figure}
+\textit{Original theory of actors - modeled on biological autonomous systems that communicate via messages - goes here. Also, mutable but NOT SHARED state}
 
 \section{Simulation}
 
@@ -512,14 +516,6 @@ This illustrates one of the biggest pitfalls of actor-based systems: as soon as 
 It seems that we gave our Person actors a little too much responsibility in our first implementation. Allowing them to handle \texttt{Withdraw} and \texttt{Deposit} messages seems natural, but when we made them handle transfers themselves we ran into trouble.
 
 In this version of the simulation we will introduce a new actor, called a \texttt{Broker}, that has the sole purpose of handling transfers between Persons. By extracting the transfer logic from the Person class, we allow Persons to simply \texttt{react} to \texttt{Withdraw} and \texttt{Deposit} messages, thereby eliminating our case of deadlock. 
-
-\begin{figure}[H]
-    \begin{center}
-    \includegraphics{images/ActorsBroker.png}
-    \end{center}
-    \caption{A Broker coordinates messages to prevent deadlocks.}
-    \label{fig:actorsBrooker}
-\end{figure}
 
 \subsection{Messages}
 
@@ -725,27 +721,8 @@ In these cases, we would like failed transfers to behave like \textit{transactio
 \part{ Software Transactional Memory}
 
 \section{Background}
-Software transactional memory (STM) is influenced by database transactions and that operations are conceptually \textbf{atomic}. STM provides abstraction of handling in-code synchronisation and provide the appearance that code is executed sequentially. Every transaction maintains a log to track its progress in case it would be \textit{aborted} to enable the operations to be \textit{rolled back}. If the transaction was successful the operations is \textit{commited} and changes made permanent.
 
-STM enables composition of atomic operations\cite{cmt} which is hard to achieve in tradtional lock-based programs. This proves extremely useful to avoid inconsistency when executing two dependent operations.
-
-\section{Concurrency in Clojure}
 Clojure is the third JVM language we will use. Unlike the object-oriented Java and Groovy, Clojure is a functional language that also happens to be a dialect of LISP.  Consequently, Clojure tries to avoid shared, mutable objects and focuses instead on immutable data structures and functions that operate on them.
-
-Clojure provides a separation of state and identity, where an identity could be viewed as an account and the the balance the state. A withdrawal does not change the identity rather it affects its state. The balance prior the withdrawal becomes a record of the balance at that time and that state is immutable. In Clojure all values and collections are, by design, \textbf{immutable} and an identity could only change state in a \textbf{transaction}.
-
-The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback \footnote{\url{http://clojure.org/refs}}. For example I/O-operations could prove extremely hard to redo and printing to e.g. a log could obfuscate it. Best practice is to schedule operations with side effects in a post-commit section.
-
-MVCC tag the data with a read and write timestamp to keep track of the current version. When a write transaction $T_i$ is started the latest version of the data is available as a snapshot with a timestamp $TS(T_i)$. If another write transaction $T_j$ is running, there must exist a timestamped version $TS(T_j)$ where $TS(T_i) \le TS(T_j)$ to complete and for $T_i$ to commit. Otherwise $T_i$ is aborted and any changes rollbacked. This ensures consistency as well as isolation since each transaction work with its own snapshot.
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.8]{images/TransactionWriteCollision.png}
-\caption{A write collision when inserting element in a linked list}
-\label{fig:twc}
-\end{figure}
-
-Looking at the illustration Figure~\ref{fig:twc} of a write collision that occur when $T_2$ tries to insert an element before $T_1$ has successfully commited, $T_2$ silently aborts and retry the insert operation with a fresh snapshot reflecting the changes made by $T_1$.
 
 \section{Immutable data types}
 
@@ -781,11 +758,11 @@ The simplest of these types is called an \texttt{atom}. Atoms are references to 
 user=> (def x (atom 1))
 #'user/x
 user=> x
-#<Atom 24e33e18: 1>
+#<Atom@24e33e18: 1>
 user=> (swap! x inc)
 2
 user=> x
-#<Atom 24e33e18: 2>
+#<Atom@24e33e18: 2>
 	\end{minted}
 \end{listing}
 
@@ -867,27 +844,6 @@ IllegalStateException No transaction running
 Here we can see what coordinated change really means. An exception was thrown because we tried to \texttt{alter} a \texttt{ref}'s value \textbf{independently}. Instead, \texttt{ref}s are meant to be used within \textbf{transactions}, as part of Clojure's Software Transactional Memory implementation. 
 
 \subsection{Transactions}
-<<<<<<< HEAD
-Database transactions obey to atomicity, consistency, isolation and durability\footnote{In concurrency control this is known under the acronym ACID} and for transactions in Clojure the first three are valid. Durability is not an issue since values are stored in volatile memory (RAM).
-
-\begin{description}
-    \item[Atomicity] The transaction was successful or did not happen. This prevents race-conditions to occur.
-    \item[Consistency] The data integrity is maintained after transaction is executed regardless if commit or aborts the result. In case of two simultaneous \texttt{withdraw} and \texttt{deposit} the balance correctly reflects the yielded result from both operations.
-    \item[Isolation] Transition states are not visible to other transactions, only the outcome of an success becomes visible for other transactions.
-\end{description}
-
-The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback\footnote{\url{http://clojure.org/refs}}. For example I/O-operations could prove extremely hard to redo and printing to e.g. a log could obfuscate it. Best practice is to schedule operations with side effects in a post-commit section.
-
-MVCC tag the data with a read and write timestamp to keep track of the current version. When a write transaction $T_i$ is started the latest version of the data is available as a snapshot with a timestamp $TS(T_i)$. If another write transaction $T_j$ is running, there must exist a timestamped version $TS(T_j)$ where $TS(T_i) \lt TS(T_j)$ to complete and for $T_i$ to commit. Otherwise $T_i$ is aborted and any changes rolled back. This ensures consistency as well as isolation since each transaction work with its own snapshot.
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.8]{images/TransactionWriteCollision.png}
-\caption{A write collision when inserting element in a linked list.}
-\label{fig:twc}
-\end{figure}
-
-Looking at the illustration Figure~\ref{fig:twc} of a write collision that occurs when $T_2$ tries to insert an element before $T_1$ has successfully commited, then $T_2$ silently aborts and retries the insert operation with a fresh snapshot reflecting the changes made by $T_1$.
 
 A transaction is delineated by the \texttt{dosync} form:
 
@@ -1001,16 +957,16 @@ Retrieving the value of an agent, or any reference type, doesn't require us to s
 	\begin{minted}[linenos=true,bgcolor=code]{clojure}
 accounts=> (send-off x (fn [x] (Thread/sleep 10000) (inc x)))
 #<Agent@127e942f: 0>
-accounts=> @x ; Immediately
+accounts=> @x ; 2 seconds later
 0
-accounts=> @x ; 10 seconds later
+accounts=> @x ; 12 seconds later
 1
 	\end{minted}
 \end{listing}
 
 Not only does this show that agents are indeed asynchronous, but we also see that we can dereference them to get their value while they are processing messages, in constant time.
 
-This is a result of Clojure's reference type semantics - we don't need to use a function to get an agent's value as functions are solely for state transitions, which is not what a read-value-function represents. Instead, as reference types are designed to be state machines, dereferencing can be supported as a ''special case'' operation for returning a machine's current state.
+This is a result of Clojure's reference type semantics - we don't need to use a function to get an agent's value as functions are solely for state transitions, which is not what a read-value-function represents. Instead, as reference types are designed to be state machines, dereferencing can be supported as a "special case" operation for returning a machine's current state.
 
 \subsubsection{Flexibility}
 
@@ -1085,7 +1041,7 @@ We can simplify matters by realising that we can simulate autonomy by scheduling
 	\end{minted}
 \end{listing}
 
-That function \texttt{f} is the anonymous function on line 4. In fact, it is a closure that closes over the variable \texttt{me}, which represents the Person we are starting. In this way this function represents a Person's ''unique'', autonomous behaviour. 
+That function \texttt{f} is the anonymous function on line 4. In fact, it is a closure that closes over the variable \texttt{me}, which represents the Person we are starting. In this way this function represents a Person's "unique", autonomous behaviour. 
 
 This behaviour is scheduled on the given timeline, which, like in Groovy, is a \texttt{ScheduledThreadPoolExecutor}. The difference is that it is entirely okay for the scheduled thread to actually do the transfer - we don't need the added complexity of handing execution back to an actor thread any more.
 
@@ -1114,7 +1070,7 @@ We can do this because of how we implement \texttt{transfer}, \texttt{withdraw} 
 
 Finally we define some behaviour to go with our state. As we can see, we only have logic that is specific to the action; validation and monitoring of state is handled by our helper functions that were defined earlier.
 
-Every action is wrapped in a transaction, as transactions can nest without issue. The fact that \texttt{withdraw} and \texttt{deposit} are transactions ensures that withdrawals and deposits on the same Person do not conflict; the fact that \texttt{transfer} is a transaction ensures that its effects are committed iff both the \texttt{deposit} and \texttt{withdraw} \textit{both} succeed. The \texttt{transfer} function is a perfect example of \textbf{composed operations} and it is for this reason we can safely deposit before we withdraw.
+Every action is wrapped in a transaction, as transactions can nest without issue. The fact that \texttt{withdraw} and \texttt{deposit} are transactions ensures that withdrawals and deposits on the same Person do not conflict; the fact that \texttt{transfer} is a transaction ensures that its effects are committed iff both the \texttt{deposit} and \texttt{withdraw} \textit{both} succeed. It is for this reason we can safely deposit before we withdraw.
 
 \subsection{Running}
 
@@ -1153,7 +1109,6 @@ nil
 It seems to be working, and we have managed to reduce our complexity significantly by removing all actor threads from the equation. It is trivial to make the size of our \texttt{ScheduledThreadPool} a function of the available cores, meaning we can also scale our program with ease.
 
 \part{Conclusion}
-The emerging trend of concurrency to speed up execution of applications and for managing distributed computing paved the way to find a stable and scalable way of implementing concurrency. In our investigation we came across traditional synchronisation with threads and locks, an object-oriented approach using actors and ultimately we went deeper into STM influenced by database transactions.
 
 \section{Threads and Locking}
 
@@ -1173,20 +1128,20 @@ We noticed throughout that declaring messages and handlers added a similar amoun
 
 A valid conclusion seems to be that actors should be used when a problem fulfils the following criteria:
 
-\begin{itemize}
+\begin{enumerate}
 \item The problem can be naturally divided into loosely coupled parts.
 \item Minimal communication is required, as messages are expensive (to write, handle and send).
 \item Messages don't need to be coordinated (no transactions).
 \item Asynchronicity is a must.
-\end{itemize}
+\end{enumerate}
 
 \section{Concurrency in Clojure}
 
 Finally, we took a look at concurrency in Clojure. We saw how a functional style of programming fit naturally with Clojure's notions of identity (mutable references) and state (immutable data). This view of shared memory as a state machine, with functions as transitions and a data type as state allowed us to separate state management from behaviour. We were able to leave most state management, such as processing message queues or trying and committing transactions to the underlying implementation, and instead focused on domain specific issues such as validation and watching functions.
 
-Our behavioural code - the transition functions - also became simpler as we were able to delegate validation and watching to helper functions defined with our state. The only addition to the code was defining transactions, and this was impossible to forget as not doing so would have resulted in compile errors. The benefits were that we were able to leverage Clojure's STM implementation, which allowed us to alter state with the comfort of knowing that if anything went wrong nothing would be left inconsistent. 
+Our behavioural code - the transition functions - also became simpler as we were able to forget about validation and watching. The only addition to the code was defining transactions, and this was impossible to forget as not doing so would have resulted in compile errors. The benefits were that we were able to leverage Clojure's STM implementation, which allowed us to alter state with the comfort of knowing that if anything went wrong nothing would be left inconsistent. 
 
-This complete lack of boilerplate left our code far more readable, easier to predict and easier to reuse. We even got fast read performance for free, due to dereferencing not altering state. One cause of confusion however, is which reference type to pick. The following guidelines seem logical:
+This complete lack of implementation specific boilerplate left our code far more readable, easier to predict and easier to reuse. We even got fast read performance for free, due to dereferencing not altering state. One cause of confusion however, is which reference type to pick. The following guidelines seem logical:
 
 \begin{itemize}
 \item Atoms when \textbf{uncoordinated}, \textbf{synchronous} change is required.
@@ -1194,28 +1149,18 @@ This complete lack of boilerplate left our code far more readable, easier to pre
 \item Agents for \textbf{uncoordinated}, \textbf{asynchronous} change. (Agents can take part in transactions but I wasn't able to get this to work in the way I wanted).
 \end{itemize}
 
-Clojure lead to reduce the amount of code written and its complexity which has advantageous implications; low maintenance, timesaving and less error prone programming. The account implementation in Clojure confirms our finding and give weight to our conclusion. As C.A.R Hoare (Tony Hoare) once said:
-\begin{quote}
-''There are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies, and the other way is to make it so complicated that there are no obvious deficiencies.''\footnote{\url{http://en.wikiquote.org/wiki/C._A._R._Hoare}}
-\end{quote}
+Given all these options, and a clean and powerful set of abstractions in which to use them, it appears that Clojure represents the state of the art in concurrency on the JVM.
 
-Given all these options, and a clean and powerful set of abstractions in which to use them, it appears that Clojure represents the state of the art in concurrency on the JVM. 
-
-%\newpage
 \appendix
 \addappheadtotoc
-\chapter{Appendix}
+\chapter{RDF}\label{appA}
 
-\section*{Code}
-The source code is available at \url{https://github.com/pascalc/jvm-concurrency}.
+\begin{figure}[ht]
+\begin{center}
+And here is a figure
+\caption{\small{Several statements describing the same resource.}}\label{RDF_4}
+\end{center}
+\end{figure}
 
-%% This part is for bibtex and references %%
-% \newpage
-% \renewcommand{\refname}{\section{References}}
-
-%\nocite{*} % list all of the content in .bib
-\bibliographystyle{ieeetr}
-\bibliography{sources}
-\cite{FH11}
-
+that we refer to here: \ref{RDF_4}
 \end{document}
