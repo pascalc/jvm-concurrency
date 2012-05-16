@@ -867,7 +867,6 @@ IllegalStateException No transaction running
 Here we can see what coordinated change really means. An exception was thrown because we tried to \texttt{alter} a \texttt{ref}'s value \textbf{independently}. Instead, \texttt{ref}s are meant to be used within \textbf{transactions}, as part of Clojure's Software Transactional Memory implementation. 
 
 \subsection{Transactions}
-<<<<<<< HEAD
 Database transactions obey to atomicity, consistency, isolation and durability\footnote{In concurrency control this is known under the acronym ACID} and for transactions in Clojure the first three are valid. Durability is not an issue since values are stored in volatile memory (RAM).
 
 \begin{description}
