@@ -61,6 +61,11 @@
 \section{Statement of collaboration}
 The code included in appendix and elsewhere is a product of Pascal Chatterjee and figures are a product of Joakim Carselind. The text is a collaborative outcome of our findings performing the practical investigation and deepening our knowledge by reading papers, articles and books in the subject of concurrency and related subjects.
 
+\section{Delimiation of study}
+To limit the area of study, we will investigate concurrency in the context of a bank transfer situation, where a withdrawal is followed by a deposit. The system contain a predefined amount and the systems correctness is tested by issuing several \texttt{withdraw} and \texttt{deposit} operations in parallel and observering the amount of money after these operations have been performed.
+
+With this said, the result should not be viewed as the best language to use to create a large system as we will not have time to set up and perform extensive test taking robustness, safety, availability and performance into consideration.
+
 \section{Problem statement}
 To reach better utilisation of hardware resources, an increasing key factor for companies providing IT solutions in order to be competetive and profitable, one must leverage the full potential of multi-core processors. The rapid development of distributed computing and concurrent applications require robust and scalable software architecture to reap the benefits from concurrency.
 
@@ -78,16 +83,18 @@ Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpre
 \part{Introducing concurrency}
 
 \section{Concurrency control} \label{sec:con_con}
-Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems\cite{concon}. When modules, regarding level, communicates concurrently there is a risk of the data integrity being violated. The consequence could be that the system stop working or, even worse, continue working without exception. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
+Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems\cite{concon}. When modules, regarding level, communicate concurrently there is a risk of the data integrity being violated. The consequence could be that the system stop working or, even worse, continue without any outer signs of an error occured. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
 
-\section{Threads}
-A thread is a light weight process with low inter-thread communication overhead. The low utilisation of resources inside the process and low communication overhead is beneficial for an application leveraging concurrency. 
+\section{Threads and processes}
+A process is generally created and managed by the operating system and have its own state, address space and communicates with an interprocess protocol.
 
-The existence of multiple threads inside a process brings up a risk of different threads operating on the same memory resource and due to this synchronisation is important to maintain correctness. The operations performed by threads \textit{need} to be \textbf{atomic} if they execute code in a \textbf{critical section} in the context of the process memory and shared mutuable resources.
+Threads, as opposed to processes, share state, address space and communicate directly since they share the address space. Threads are spawned by the process and typically suited to perform tasks not requiring a linear solving approach, i.e. the task could be parallelised. When a thread has completed its task, it is absorbed by the process that created it.
+
+The existence of multiple threads inside a process brings up a risk of different threads operating on the same memory resource and due to this synchronisation is important to maintain correctness. The operations performed by threads need to be \textbf{atomic} if they execute code in a \textbf{critical section} in the context of the process memory and shared mutuable resources.
 
 \section{Atomicity}
 
-One of the first things we should realise when writing concurrent programs is that most of the statements we use are \textit{not} \textbf{atomic}. This means that although we tend to think of them as indivisible units of computation, they expand to multiple instructions when compiled to bytecode. It is these instructions that are atomic, not the statements we write in high-level JVM languages.
+One of the first things we should realise when writing concurrent programs is that most of the statements we use are \textit{not} \textbf{atomic}. This means that although we tend to think of them as indivisible units of computation, they expand to multiple instructions when compiled to bytecode. It is these instructions that are atomic, not the statements we write in high-level languages.
 
 Let us take the simple example of incrementing an integer variable. In Java, we could write the function:
 
