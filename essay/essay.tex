@@ -165,16 +165,14 @@ As we can see, after this interleaving of statements, \texttt{var = 1} even thou
 \end{center}
 \end{figure}
 
-All of the concurrency strategies we will discuss in this paper aim to mitigate the effects of race conditions, and thereby ensure that programs behave in a deterministic way despite the activity of multiple threads. They do this by eliminating one of the factors from \textbf{uncontrolled access to shared, mutable state} that can lead to problems. The first approach we consider, threads and locks, uses locks to \textbf{control access} to shared mutable state.
+All of the concurrency strategies discussed in this paper aim to mitigate the effects of race conditions, and thereby ensure that programs behave in a deterministic way despite the activity of multiple threads. They do this by eliminating one of the factors from \textbf{uncontrolled access to shared, mutable state} that can lead to problems. The first approach we consider, threads and locks, uses locks to \textbf{control access} to shared mutable state.
 
 \part{Threads and Locks}
 
 \section{Background}
-When an application is initiated from the operating system, a process is created to host the application and it is allocated working primary memory (random access memory). 
+When an application is initiated from the operating system, a process is created to host the application and it is allocated working primary memory (random access memory). Typically there are many processes running simultaneously and each process can spawn multiple threads. Since threads share the address space, they share variables which implies a risk of executing overlapping operations on the same resource and synchronisation of resources is crucial.
 
-Typically there are many processes running simultaneously and each process can have multiple threads. A thread performs small tasks for the process and has low overhead for inter-thread communication (usually carried out in shared memory) in contrast to inter-process communication. The low communication overhead is advantageous for parallelism since a process has a well defined address space, threads run a high risk of executing overlapping operations on the same resource, the synchronisation of the resources is crucial.
-
-We will use the example of bank accounts that allow withdrawals, deposits and reading the value of a balance to illustrate the concurrency strategies in this paper. Formally we can view this as an interface, that in Java can be written:
+A bank account that allow withdrawals, deposits and reading the value of a balance is used to illustrate the concurrency strategies in this paper. Formally this could be viewed as an interface, that in Java can be written:
 
 \begin{listing}[H]
 	\begin{minted}[linenos=true,bgcolor=code]{java}
@@ -255,18 +253,20 @@ Here the final balance ranged between 0 and 20, which is an error of $-10 \leq e
 
 \begin{table}[h]
     \centering
-    \begin{tabular}{l | c}    
-    \textbf{Mean} & 11.6 \\
-    \textbf{Deviation} & 7.2 \\ 
+    \begin{tabular}{| l | c |} 
+    \hline
+    \textbf{Mean} & \$11.6 \\
+    \textbf{Deviation} & \$7.2 \\
+    \hline 
     \end{tabular}
-    \caption{1 000 runs of non-thread safe bank transfer application. Highly non-deterministic.}
+    \caption{1 000 runs of non-thread safe bank transfer application shows a highly non-deterministic behaviour.}
 \end{table}
 
 This makes it very obvious that the \texttt{deposit} and \texttt{withdraw} methods are \textbf{critical sections} - a section of code that should only be executed by one thread at any time. These sections need to be \textbf{mutually exclusive} so that we can reason about their effects as if they were atomic actions. Our problems arise only when a thread context switches while leaving the shared, mutable balance variable in an inconsistent state. 
 
 \section{Locking with \texttt{synchronized}}
 
-Our first solution to this problem will be to use Java's \texttt{synchronized} concept to ensure that even if a context switch occurs within a critical section, other threads are blocked from entering until the currently executing thread completes its actions.
+Our first solution to this problem will be to use Java's \texttt{synchronized} concept to ensure that even if a context switch occurs within a critical section, other threads are blocked from entering until the currently executing thread completes its actions. This enures that the mutual exclusion property is valid in a way provided a \textbf{monitor} class.
 
 The changes to the code to facilitate this are minimal: we simply insert the keyword \texttt{synchronized} into the signature of any method that references the shared variable \texttt{balance}. For us, this is all three methods (even \texttt{getBalance} which should not be allowed access to \texttt{balance} during a \texttt{deposit} or \texttt{withdraw} as it is by definition inconsistent at that time).
 
@@ -299,7 +299,7 @@ As there is no perceptible difference between the read frenzy, with more reads t
 
 \section{Explicit locks}
 
-Luckily for us, Java has included support for more finely-grained locks than an object's monitor since version 1.5. Of these, the \texttt{ReentrantReadWriteLock} is most suitable for our purposes. This object actually consists of two locks, a read-lock and a write-lock. The write-lock, like the object's monitor, mutually excludes everything. The read-lock however, allows multiple threads to acquire it at the same time, but still excludes other threads from acquiring the write-lock.
+Luckily for us, Java has included support for more finely-grained locks than an object's monitor since version 1.5. Of these, the \texttt{ReentrantReadWriteLock} is most suitable for our purposes. This object actually consists of two locks, a read-lock and a write-lock. The write-lock, like the object's monitor, mutually excludes everything. The read-lock however, allows multiple threads to acquire read-lock at the same time, but still excludes other threads from acquiring the write-lock.
 
 This has the effect of allowing read operations to execute in parallel while serialising writes. The reentrant part of the lock's name signifies that either lock may be acquired multiple times - such as read methods calling other read methods, with no ill effects.
 
@@ -384,7 +384,7 @@ Actors are single-threaded, provide well defined states where transition to a st
 \item Create more actors
 \end{enumerate}
 
-Usually an actor is ''responsible'' for one mutable state and does not conflict with other actors nor their mutable state. From a computatational view, an actor ought to perform an asynchronous task simplifying the coordination of results. Thinking in an OOP way, each actor is its own lightweight process\footnote{Not an actual thread, rather a virtual thread that is allocated a real one on demand.} designated to perform one task and communicate with immutable messages (not method calls!) to other active actors.
+Usually an actor is ''responsible'' for one mutable state and does not conflict with other actors nor their mutable state. From a computatational view, an actor ought to perform an asynchronous task simplifying the coordination of results. Thinking in an OOP way, each actor is its own lightweight process\footnote{Not an actual thread, rather a virtual thread that is allocated a real one on demand.} designated to perform one task and communicate with immutable messages (not method calls!) to other active actors. Since the messages are held in a queue and read in a FIFO manner the mutual exclusion property is guaranteed.
 
 \begin{figure}[H]
     \begin{center}
@@ -417,6 +417,7 @@ Actor-based systems can be implemented in many JVM languages, but usually throug
 Our first implementation of the simulation tries to keep the system as simple as possible. We define just the one Actor - called Person - that has a name and a balance as its state. This Person accepts two messages, \texttt{Deposit} and \texttt{Withdraw} that affect this state. 
 
 \subsection{Messages}
+Below is an example implementation of an immutable message that Actors use to communicate between each other. The message is \textbf{not} subject to change which preserves that the received message is not altered after it has been sent.
 
 \begin{listing}[H]
 	\begin{minted}[linenos=true,bgcolor=code]{java}
@@ -722,11 +723,11 @@ If we were to replace our \texttt{@ActiveMethod} decorators with the \texttt{syn
 
 We also gain by using the higher-level Actor abstraction as opposed to threads. Though the Actor model requires that only one thread execute methods within an Actor at one time, there is no requirement that it is the \textit{same} thread. As a result, we can easily have a crowd of Actors sharing a limited pool of threads, where the thread pool size is optimised for the number of available processors. 
 
-Again this could be achieved using \texttt{Executors} and locking, and indeed it probably is in the underlying Actor implementation, but if can use library code instead of writing our own then we nearly always should.
+Again this could be achieved using \texttt{Executors} and locking, and indeed it probably is in the underlying Actor implementation, but if a library exists it should be used instead of writing our own code.
 
 \subsection{Transactions}
 
-One of the last problems with our implementation is that our simulation is still quite fragile. If a Person instance dies mid-transfer, then the Broker carrying out the transfer will deadlock and the amount of money in the system will be inconsistent.  Also, the return of a boolean signifying whether an action succeeded is not as semantic as it could be: we might want to return something else on success and throw an exception on failure.
+One of the last problems with our implementation is that our simulation is still quite fragile. If a Person instance dies mid-transfer, then the Broker carrying out the transfer will deadlock and the amount of money in the system will be inconsistent.  Also, the return of a boolean signifying whether an action succeeded is not as semantic as it could be: for example if a message is never received, \texttt{False} will never be returned and hence a \texttt{MessageNotReceivedException} is more appropriate.
 
 In these cases, we would like failed transfers to behave like \textit{transactions}, i.e. they should be rolled back on failure, leaving no trace of their execution, so they can be retried at a later time. This is possible using a system known as Software Transactional Memory (STM), which we will discuss next.
 
@@ -1160,7 +1161,10 @@ nil
 It seems to be working, and we have managed to reduce our complexity significantly by removing all actor threads from the equation. It is trivial to make the size of our \texttt{ScheduledThreadPool} a function of the available cores, meaning we can also scale our program with ease.
 
 \part{Conclusion}
-The emerging trend of concurrency to speed up execution of applications and for managing distributed computing paved the way to find a stable and scalable way of implementing concurrency. In our investigation we came across traditional synchronisation with threads and locks, an object-oriented approach using actors and ultimately we went deeper into STM influenced by database transactions.
+
+As declared in the section delimiation of study, the project has focused on a rather small domain of a banking system, namely multiple concurrent transfers of money between accounts. The impact on the result and the discussion is that large systems are not reflected properly and the results presented might differ if a complete system would have been implemented. A complete banking system, or other system for that matter, contains many areas not covered by this report in which the performance of solutions discussed would have a negligible impact on the overall performance, as well as stability and security.  
+
+The emerging trend of concurrency to speed up execution of applications and for managing distributed computing paved the way to find a stable and scalable way of implementing concurrency. In our investigation we came across traditional synchronisation with threads and locks, an object-oriented approach using actors and ultimately we went deeper into STM influenced by database transactions. These strategies have in common that they all want the control the exection of code that acts on shared mutable resources, i.e. ensure that the mutual exclusion property is guaranteed at any point involving threads that might access mutable data.
 
 \section{Threads and Locking}
 
