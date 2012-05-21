@@ -62,7 +62,7 @@
 The code included in appendix and elsewhere is a product of Pascal Chatterjee and figures are a product of Joakim Carselind. The text is a collaborative outcome of our findings performing the practical investigation and deepening our knowledge by reading papers, articles and books in the subject of concurrency and related subjects.
 
 \section{Delimiation of study}
-To limit the area of study, we will investigate concurrency in the context of a bank transfer situation, where a withdrawal is followed by a deposit. The system contain a predefined amount and the systems correctness is tested by issuing several \texttt{withdraw} and \texttt{deposit} operations in parallel and observering the amount of money after these operations have been performed.
+To limit the area of study, we will investigate concurrency in the context of a bank transfer situation, where a withdrawal is followed by a deposit. The system contains a predefined amount and the correctness of the system is tested by issuing several \texttt{withdraw} and \texttt{deposit} operations in parallel and observering the amount of money after these operations have been performed.
 
 With this said, the result should not be viewed as the best language to use to create a large system as we will not have time to set up a large system and perform extensive test taking robustness, safety, availability and performance into consideration.
 
@@ -255,10 +255,11 @@ Here the final balance ranged between 0 and 20, which is an error of $-10 \leq e
 
 \begin{table}[h]
     \centering
-    \begin{tabular}{lc}    
+    \begin{tabular}{l | c}    
     \textbf{Mean} & 11.6 \\
     \textbf{Deviation} & 7.2 \\ 
     \end{tabular}
+    \caption{1 000 runs of non-thread safe bank transfer application. Highly non-deterministic.}
 \end{table}
 
 This makes it very obvious that the \texttt{deposit} and \texttt{withdraw} methods are \textbf{critical sections} - a section of code that should only be executed by one thread at any time. These sections need to be \textbf{mutually exclusive} so that we can reason about their effects as if they were atomic actions. Our problems arise only when a thread context switches while leaving the shared, mutable balance variable in an inconsistent state. 
@@ -375,7 +376,7 @@ The original theory of actors is modeled from biology, more precise the autonomo
 
 When using object-oriented programming (OOP), encapsulation of an objects data is of uttermost importance to maintain its internal data integrity. Via instance methods the state of the object can be changed and whilst this work well in a single-threaded environment it fails in multi-threaded environments. Multiple threads might call the instance methods concurrently and jeopardize isolation and consistency. 
 
-Actors are single-threaded, provide well definied states where transition to a state and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor responds in one, or more, ways \cite{HO09}
+Actors are single-threaded, provide well defined states where transition to a state and behaviour is determined by receiving a message which is communicated asychronously. These messages could be an \texttt{Integer}, a \texttt{String} or even a \texttt{Class} if immutable. Upon receiving a message an actor responds in one, or more, ways \cite{HO09}
 
 \begin{enumerate}
 \item Send out messages to known actors, it self included
@@ -481,7 +482,7 @@ void transfer(Person target, float amount) {
 	\end{minted}
 \end{listing}
 
-A refreshing feature of this code is the lack of locking boilerplate around the \texttt{balance} instance variable. We are allowed to leave \texttt{balance} lock-free because of the semantics of the actor model - by definition, only one message, and therefore action, can be processed at any one time. This makes each action atomic and means we don't have to worry about shared memory related race conditions within the actions themselves.
+A refreshing feature of this code is the lack of locking boilerplate around the \texttt{balance} instance variable. We are allowed to leave \texttt{balance} lock-free because of the semantics of the actor model - by definition, only one message, and therefore action, can be processed at any one time. This makes each action atomic and means we do not have to worry about shared memory related race conditions within the actions themselves.
 
 \subsection{Deadlock}
 
@@ -743,7 +744,7 @@ Clojure provides a separation of state and identity, where an identity could be 
 
 The use of operations with side effects in transactions is highly discouraged due to difficulties to perform rollback \footnote{\url{http://clojure.org/refs}}. For example I/O-operations could prove extremely hard to redo and printing to e.g. a log could obfuscate it. Best practice is to schedule operations with side effects in a post-commit section.
 
-MVCC tag the data with a read and write timestamp to keep track of the current version. When a write transaction $T_i$ is started the latest version of the data is available as a snapshot with a timestamp $TS(T_i)$. If another write transaction $T_j$ is running, there must exist a timestamped version $TS(T_j)$ where $TS(T_i) \le TS(T_j)$ to complete and for $T_i$ to commit. Otherwise $T_i$ is aborted and any changes rollbacked. This ensures consistency as well as isolation since each transaction work with its own snapshot.
+MVCC tag the data with a read and write timestamp to keep track of the current version. When a write transaction $T_i$ is started the latest version of the data is available as a snapshot with a timestamp $TS(T_i)$. If another write transaction $T_j$ is running, there must exist a timestamped version $TS(T_j)$ where $TS(T_i) \lt TS(T_j)$ to complete and for $T_i$ to commit. Otherwise $T_i$ is aborted and any changes rollbacked. This ensures consistency as well as isolation since each transaction work with its own snapshot.
 
 \begin{figure}[H]
 \centering
@@ -856,7 +857,7 @@ In line 3 we declare that \texttt{balance} is only valid if the form \texttt{(>=
 
 \subsection{Refs}
 
-Now we've seen how validators work, let's get back to Clojure's reference types.
+Now We have seen how validators work, let's get back to Clojure's reference types.
 
 Sometimes changes to multiple mutable references needs to be coordinated. For these cases we wrap data types with reference types called \texttt{ref}. We can change the value of a \texttt{ref} using \texttt{alter}, which, like \texttt{swap!}, sets the new value of a \texttt{ref} to that returned by the supplied function. 
 
@@ -1001,7 +1002,7 @@ On the surface, Clojure's agents seem very similar to Groovy's actors: both allo
 
 \subsubsection{Read performance}
 
-Retrieving the value of an agent, or any reference type, doesn't require us to send it a message. 
+Retrieving the value of an agent, or any reference type, does not require us to send it a message. 
 
 \begin{listing}[H]
 	\begin{minted}[linenos=true,bgcolor=code]{clojure}
@@ -1016,7 +1017,7 @@ accounts=> @x ; 10 seconds later
 
 Not only does this show that agents are indeed asynchronous, but we also see that we can dereference them to get their value while they are processing messages, in constant time.
 
-This is a result of Clojure's reference type semantics - we don't need to use a function to get an agent's value as functions are solely for state transitions, which is not what a read-value-function represents. Instead, as reference types are designed to be state machines, dereferencing can be supported as a ''special case'' operation for returning a machine's current state.
+This is a result of Clojure's reference type semantics - we do not need to use a function to get an agent's value as functions are solely for state transitions, which is not what a read-value-function represents. Instead, as reference types are designed to be state machines, dereferencing can be supported as a ''special case'' operation for returning a machine's current state.
 
 \subsubsection{Flexibility}
 
@@ -1044,11 +1045,11 @@ We can think of a Person as a record with fields for a name and a balance. This 
 
 \subsection{Transfers are synchronous}
 
-In our Groovy implementation, we used \texttt{sendAndWait} (and later a blocking \texttt{ActiveMethod}) in our transfers that made them wait until the \texttt{withdraw} and \texttt{deposit} completed before returning. In the context of our simulation, where all we do is transfer (as we don't want to generate or lose money), having \texttt{withdraw} and \texttt{deposit} as asynchronous actions doesn't make sense. And if we don't need asynchronous actions, maybe we shouldn't be using agents at all.
+In our Groovy implementation, we used \texttt{sendAndWait} (and later a blocking \texttt{ActiveMethod}) in our transfers that made them wait until the \texttt{withdraw} and \texttt{deposit} completed before returning. In the context of our simulation, where all we do is transfer (as we do not want to generate or lose money), having \texttt{withdraw} and \texttt{deposit} as asynchronous actions does not make sense. And if we do not need asynchronous actions, maybe we shouldn't be using agents at all.
 
 \subsection{Choosing a reference type}
 
-So what should we use if not agents? We've established that our transitions (\texttt{withdraw} and \texttt{deposit}) need to be \textbf{synchronous} and \textbf{coordinated}. The Clojure reference type for that is a \texttt{ref}. We can write a kind of factory method for these reference types that creates the underlying record, wraps it and sets the appropriate helper functions.
+So what should we use if not agents? We have established that our transitions (\texttt{withdraw} and \texttt{deposit}) need to be \textbf{synchronous} and \textbf{coordinated}. The Clojure reference type for that is a \texttt{ref}. We can write a kind of factory method for these reference types that creates the underlying record, wraps it and sets the appropriate helper functions.
 
 \begin{listing}[H]
 	\begin{minted}[linenos=true,bgcolor=code]{clojure}
@@ -1093,7 +1094,7 @@ We can simplify matters by realising that we can simulate autonomy by scheduling
 
 That function \texttt{f} is the anonymous function on line 4. In fact, it is a closure that closes over the variable \texttt{me}, which represents the Person we are starting. In this way this function represents a Person's ''unique'', autonomous behaviour. 
 
-This behaviour is scheduled on the given timeline, which, like in Groovy, is a \texttt{ScheduledThreadPoolExecutor}. The difference is that it is entirely okay for the scheduled thread to actually do the transfer - we don't need the added complexity of handing execution back to an actor thread any more.
+This behaviour is scheduled on the given timeline, which, like in Groovy, is a \texttt{ScheduledThreadPoolExecutor}. The difference is that it is entirely okay for the scheduled thread to actually do the transfer - we do not need the added complexity of handing execution back to an actor thread any more.
 
 \subsection{Rethinking actions}
 
@@ -1182,7 +1183,7 @@ A valid conclusion seems to be that actors should be used when a problem fulfils
 \begin{itemize}
 \item The problem can be naturally divided into loosely coupled parts.
 \item Minimal communication is required, as messages are expensive (to write, handle and send).
-\item Messages don't need to be coordinated (no transactions).
+\item Messages do not need to be coordinated (no transactions).
 \item Asynchronicity is a must.
 \end{itemize}
 
