@@ -64,19 +64,19 @@ The code included in appendix and elsewhere is a product of Pascal Chatterjee an
 \section{Delimiation of study}
 To limit the area of study, we will investigate concurrency in the context of a bank transfer situation, where a withdrawal is followed by a deposit. The system contain a predefined amount and the systems correctness is tested by issuing several \texttt{withdraw} and \texttt{deposit} operations in parallel and observering the amount of money after these operations have been performed.
 
-With this said, the result should not be viewed as the best language to use to create a large system as we will not have time to set up and perform extensive test taking robustness, safety, availability and performance into consideration.
+With this said, the result should not be viewed as the best language to use to create a large system as we will not have time to set up a large system and perform extensive test taking robustness, safety, availability and performance into consideration.
 
 \section{Problem statement}
 To reach better utilisation of hardware resources, an increasing key factor for companies providing IT solutions in order to be competetive and profitable, one must leverage the full potential of multi-core processors. The rapid development of distributed computing and concurrent applications require robust and scalable software architecture to reap the benefits from concurrency.
 
-In the area of concurrency, not all programming languages provide sufficient support for concurrent execution and those that do: which is most appropriate to use?
+To design concurrent applications is complicated but how could one make it less complicated to implement?
 
 \section{Introduction}
 More cores let the computer execute instructions like add or move parallel which could increase the performance of a software application. However, the potential performance gain comes with a price namely increased control over synchronisation to prevent memory corruption in shared memory resources. Since traditional sequential execution is, to some extent, abandoned for concurrent execution, a situation arise that could cause the application to behave non-deterministically.
 
 For this reason, synchronisation plays a crucial role to maintain consistency and correctness in concurrent environments.
 
-The type\footnote{In the aspect of read and write operations or computationally intense} of the application has a significant role when parallel computing is an alternative. The frequency and distribution of opertions is to be taken into account when the architecture is sketched and the solution designed. Applications that consists of mutually exclusive operations such as distributed database queries performs well under concurrency whilst applications tackling a computationally hard problem see no or insignificant performance gain when implemented with a parallel design.
+Applications that consists of mutually exclusive operations such as distributed database queries performs well under concurrency whilst applications tackling a computationally hard problem might see no or insignificant performance gain when implemented with a parallel design.
 
 Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpreter Lock} (GIL), so we need to use languages such as C/C++/Java to leverage multiple processors. We will focus on the JVM in this paper.  
 
@@ -86,9 +86,9 @@ Modern, dynamic languages like Ruby and Python feature a \textit{Global Interpre
 Concurrency control defines guidelines to maintain data integrity and achieve correctness in concurrent environments such as hardware modules and operating systems\cite{concon}. When modules, regarding level, communicate concurrently there is a risk of the data integrity being violated. The consequence could be that the system stop working or, even worse, continue without any outer signs of an error occured. If situations like this occurs, they may be extremely difficult to reproduce and debug. Therefore the use of concurrency control is highly important to make sure that the system conforms to rules applicable for concurrent environments.
 
 \section{Threads and processes}
-A process is generally created and managed by the operating system and have its own state, address space and communicates with an interprocess protocol.
+A process is generally created and managed by the operating system and have its own state, address space and communicates using an interprocess protocol.
 
-Threads, as opposed to processes, share state, address space and communicate directly since they share the address space. Threads are spawned by the process and typically suited to perform tasks not requiring a linear solving approach, i.e. the task could be parallelised. When a thread has completed its task, it is absorbed by the process that created it.
+Threads, as opposed to processes, share state, address space and communicate directly since they share address space and hence variables. Threads are spawned by a process and typically suited to perform tasks not requiring a linear solving approach, i.e. the task could be parallelised. When a thread has completed its task, it is absorbed by the process that created it.
 
 The existence of multiple threads inside a process brings up a risk of different threads operating on the same memory resource and due to this synchronisation is important to maintain correctness. The operations performed by threads need to be \textbf{atomic} if they execute code in a \textbf{critical section} in the context of the process memory and shared mutuable resources.
 
